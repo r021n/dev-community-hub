@@ -18,7 +18,7 @@ const getPost = async (req, res) => {
 
     res.status(200).json(post);
   } catch (error) {
-    res.status(500).json({ message: "Terjadi kesalahan pada server" });
+    res.status(500).json({ message: "Terjadi kesalahan pada server", error });
   }
 };
 
