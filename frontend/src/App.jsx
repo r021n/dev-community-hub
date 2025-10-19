@@ -13,6 +13,7 @@ import RegisterPage from "./pages/RegisterPage";
 import ProfilePage from "./pages/ProfilePage";
 import PostDetailPage from "./pages/PostDetailPage";
 import CreatePostPage from "./pages/CreatePostPage";
+import EditPostPage from "./pages/EditPostPage";
 
 function App() {
   const { auth } = useContext(AuthContext);
@@ -34,6 +35,10 @@ function App() {
           <Route
             path="/create-post"
             element={auth.token ? <CreatePostPage /> : <Navigate to="/login" />}
+          />
+          <Route
+            path="/post/:id/edit"
+            element={auth.token ? <EditPostPage /> : <Navigate to="/login" />}
           />
         </Routes>
       </main>

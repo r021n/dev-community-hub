@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useContext, useCallback } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, Link } from "react-router-dom";
 import axios from "axios";
 import { AuthContext } from "../context/AuthContext";
 import Comment from "../components/Comment";
@@ -95,9 +95,9 @@ const PostDetailPage = () => {
         </p>
         {isOwner && (
           <div>
-            <button onClick={() => alert("fitur edit belum dibuat")}>
-              Edit
-            </button>
+            <Link to={`/post/${id}/edit`}>
+              <button>Edit post</button>
+            </Link>
             <button onClick={handleDelete} style={{ marginLeft: "8px" }}>
               Hapus
             </button>
@@ -110,7 +110,7 @@ const PostDetailPage = () => {
               .filter((t) => t)
               .map((tag) => (
                 <span key={tag} className="tag">
-                  #{tag}
+                  #{tag}{" "}
                 </span>
               ))}
         </div>
