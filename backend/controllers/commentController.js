@@ -17,12 +17,18 @@ const postComment = async (req, res) => {
   const userId = req.user.id;
 
   try {
-    const newComment = await commentService.createComment(
-      postId,
-      userId,
-      content,
-      parentId
-    );
+    const { newComment, postOwnerId, commenterUsername } =
+      await commentService.createComment(postId, userId, content, parentId);
+
+    if (postOwnerId !== userId) {
+      const socketId = req.getSocketId(postOwnerId);
+      if (socketId) {
+        req.io.to(socketId).emit("newNotification", {
+          message: `${commenterUsername} mengomentari postingan anda`,
+          post: postId,
+        });
+      }
+    }
     res.status(201).json(newComment);
   } catch (error) {
     res.status(500).json({ message: "Gagal membuat komentar", error });
