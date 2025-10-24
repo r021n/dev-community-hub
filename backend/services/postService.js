@@ -1,19 +1,50 @@
 const db = require("../db");
 
-const getAllPosts = async () => {
-  const { rows } = await db.query(`
+const getAllPosts = async (options = {}) => {
+  const { searchTerm, tag } = options;
+  let query = `
     SELECT
       p.id, p.title, p.content, p.created_at, p.user_id,
       u.username AS author,
-      (SELECT COUNT(*) FROM likes WHERE post_id = p.id) AS like_count,
-      ARRAY_AGG(t.name) AS tags
+      COUNT(DISTINCT l.id) as like_count,
+      COALESCE(
+        ARRAY_AGG(DISTINCT t.name) FILTER (WHERE t.name IS NOT NULL),
+        '{}'
+      ) AS tags
     FROM posts p
     JOIN users u ON p.user_id = u.id
+    LEFT JOIN likes l ON l.post_id = p.id
     LEFT JOIN post_tags pt ON p.id = pt.post_id
     LEFT JOIN tags t ON pt.tag_id = t.id
+    `;
+
+  const queryParams = [];
+  let whereClauses = [];
+
+  if (searchTerm) {
+    queryParams.push(searchTerm);
+    whereClauses.push(
+      `to_tsvector('english', p.title || ' ' || p.content) @@ websearch_to_tsquery('english', $${queryParams.length})`
+    );
+  }
+
+  if (tag) {
+    queryParams.push(tag);
+    whereClauses.push(
+      `p.id IN (SELECT post_id FROM post_tags JOIN tags ON tags.id = post_tags.tag_id WHERE tags.name = $${queryParams.length})`
+    );
+  }
+
+  if (whereClauses.length > 0) {
+    query += " WHERE " + whereClauses.join(" AND ");
+  }
+
+  query += `
     GROUP BY p.id, u.username
     ORDER BY p.created_at DESC
-    `);
+  `;
+
+  const { rows } = await db.query(query, queryParams);
   return rows;
 };
 

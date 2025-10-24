@@ -1,8 +1,9 @@
 const postService = require("../services/postService");
 
 const getPosts = async (req, res) => {
+  const { search, tag } = req.query;
   try {
-    const post = await postService.getAllPosts();
+    const post = await postService.getAllPosts({ searchTerm: search, tag });
     res.status(200).json(post);
   } catch (error) {
     res.status(500).json({ message: "Terjadi kesalahan pada server" });
