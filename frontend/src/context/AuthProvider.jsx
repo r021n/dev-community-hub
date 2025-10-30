@@ -1,9 +1,11 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { AuthContext } from "./AuthContext";
 import { jwtDecode } from "jwt-decode";
+import io from "socket.io-client";
 
 export const AuthProvider = ({ children }) => {
   const [auth, setAuth] = useState({ token: null, user: null });
+  const socket = useRef(null);
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -18,6 +20,24 @@ export const AuthProvider = ({ children }) => {
     }
   }, []);
 
+  useEffect(() => {
+    if (auth.user) {
+      socket.current = io("http://localhost:3001");
+      socket.current.emit("addUser", auth.user.id);
+    } else {
+      if (socket.current) {
+        socket.current.disconnect();
+        socket.current = null;
+      }
+    }
+
+    return () => {
+      if (socket.current) {
+        socket.current.disconnect();
+      }
+    };
+  }, [auth.user]);
+
   const login = (token) => {
     localStorage.setItem("token", token);
     const decodedUser = jwtDecode(token);
@@ -30,7 +50,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ auth, login, logout }}>
+    <AuthContext.Provider value={{ auth, login, logout, socket }}>
       {children}
     </AuthContext.Provider>
   );
