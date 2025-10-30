@@ -6,7 +6,7 @@ const getAllPosts = async (options = {}) => {
     SELECT
       p.id, p.title, p.content, p.created_at, p.user_id,
       u.username AS author,
-      COUNT(DISTINCT l.id) as like_count,
+      COUNT(DISTINCT l.user_id) as like_count,
       COALESCE(
         ARRAY_AGG(DISTINCT t.name) FILTER (WHERE t.name IS NOT NULL),
         '{}'
@@ -112,31 +112,38 @@ const createPost = async (userId, title, content, tags = []) => {
 };
 
 const updatePost = async (postId, userId, title, content) => {
-  const { rows } = await db.query(
-    "UPDATE posts SET title = $1, content = $2 WHERE id = $3 AND user_id = $4 RETURNING *",
+  const result = await db.query(
+    "UPDATE posts SET title = $1, content = $2 WHERE id = $3 AND user_id = $4",
     [title, content, postId, userId]
   );
 
-  if (rows.length === 0) {
+  if (result.rowCount === 0) {
     throw new Error(
       "Post tidak ditemukan atau anda tidak memiliki izin untuk mengedit"
     );
   }
 
-  return rows[0];
+  // Setelah berhasil update, panggil getPostById untuk mendapatkan data yang lengkap dan konsisten
+  const updatedPost = await getPostById(postId);
+  return updatedPost;
 };
 
 const deletePost = async (postId, userId) => {
-  const result = await db.query(
-    "DELETE FROM posts WHERE id = $1 AND user_id = $2",
-    [postId, userId]
-  );
+  // Pertama, periksa apakah post ada dan siapa pemiliknya
+  const postCheck = await db.query("SELECT user_id FROM posts WHERE id = $1", [
+    postId,
+  ]);
 
-  if (result.rowCount === 0) {
-    throw new Error(
-      "Post tidak ditemukan atau anda tidak memiliki izin untuk menghapus post"
-    );
+  if (postCheck.rows.length === 0) {
+    throw new Error("Post tidak ditemukan");
   }
+
+  if (postCheck.rows[0].user_id !== userId) {
+    throw new Error("Anda tidak memiliki izin untuk menghapus post ini");
+  }
+
+  // Jika post ada dan user adalah pemiliknya, baru hapus
+  await db.query("DELETE FROM posts WHERE id = $1", [postId]);
 
   return { message: "Berhasil menghapus post" };
 };

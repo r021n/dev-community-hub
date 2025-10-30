@@ -25,7 +25,7 @@ const postComment = async (req, res) => {
       if (socketId) {
         req.io.to(socketId).emit("newNotification", {
           message: `${commenterUsername} mengomentari postingan anda`,
-          post: postId,
+          postId: postId,
         });
       }
     }
