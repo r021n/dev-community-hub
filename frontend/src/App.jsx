@@ -14,6 +14,7 @@ import ProfilePage from "./pages/ProfilePage";
 import PostDetailPage from "./pages/PostDetailPage";
 import CreatePostPage from "./pages/CreatePostPage";
 import EditPostPage from "./pages/EditPostPage";
+import AdminDashboardPage from "./pages/AdminDashboardPage";
 
 function App() {
   const { auth } = useContext(AuthContext);
@@ -39,6 +40,16 @@ function App() {
           <Route
             path="/post/:id/edit"
             element={auth.token ? <EditPostPage /> : <Navigate to="/login" />}
+          />
+          <Route
+            path="/admin"
+            element={
+              auth.user && auth.user.role === "admin" ? (
+                <AdminDashboardPage />
+              ) : (
+                <LoginPage />
+              )
+            }
           />
         </Routes>
       </main>
