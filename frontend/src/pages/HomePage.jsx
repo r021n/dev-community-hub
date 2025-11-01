@@ -7,6 +7,7 @@ const HomePage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
+  const [hasInteracted, setHasInteracted] = useState(false);
   const [searchParams, setSearchParams] = useSearchParams();
   const inputRef = useRef(null);
 
@@ -45,10 +46,17 @@ const HomePage = () => {
   }, [searchTerm, setSearchParams]);
 
   useEffect(() => {
-    if (inputRef.current) {
+    const initial = searchParams.get("search") || "";
+    if (initial && searchTerm === "") {
+      setSearchTerm(initial);
+    }
+  }, [searchParams]);
+
+  useEffect(() => {
+    if (hasInteracted && inputRef.current) {
       inputRef.current.focus();
     }
-  }, [posts]);
+  }, [posts, hasInteracted]);
 
   if (loading) return <p>loading...</p>;
   if (error) return <p style={{ color: "red" }}>{error}</p>;
@@ -61,7 +69,11 @@ const HomePage = () => {
           type="text"
           placeholder="search post"
           value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
+          onChange={(e) => {
+            setHasInteracted(true);
+            setSearchTerm(e.target.value);
+          }}
+          onFocus={() => setHasInteracted(true)}
           style={{ padding: "0.5rem", width: "300px" }}
         />
       </div>
