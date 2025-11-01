@@ -79,7 +79,7 @@ const createPost = async (
     await client.query("BEGIN");
 
     const postResult = await client.query(
-      "INSERT INTO posts (user_id, title, content, image_url) VALUES ($1, $2, $3) RETURNING *",
+      "INSERT INTO posts (user_id, title, content, image_url) VALUES ($1, $2, $3, $4) RETURNING *",
       [userId, title, content, imageUrl]
     );
     const newPost = postResult.rows[0];
