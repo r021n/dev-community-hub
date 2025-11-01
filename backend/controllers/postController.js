@@ -24,7 +24,7 @@ const getPost = async (req, res) => {
 };
 
 const createPost = async (req, res) => {
-  const { title, content, tags } = req.body;
+  const { title, content, tags, imageUrl } = req.body;
   const userId = req.user.id;
 
   if (!title || !content) {
@@ -32,7 +32,13 @@ const createPost = async (req, res) => {
   }
 
   try {
-    const newPost = await postService.createPost(userId, title, content, tags);
+    const newPost = await postService.createPost(
+      userId,
+      title,
+      content,
+      tags,
+      imageUrl
+    );
     res.status(201).json(newPost);
   } catch (error) {
     res.status(500).json({ message: "Gagal membuat post" });

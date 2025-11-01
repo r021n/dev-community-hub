@@ -67,14 +67,20 @@ const getPostById = async (postId) => {
   return rows[0];
 };
 
-const createPost = async (userId, title, content, tags = []) => {
+const createPost = async (
+  userId,
+  title,
+  content,
+  tags = [],
+  imageUrl = null
+) => {
   const client = await db.getClient();
   try {
     await client.query("BEGIN");
 
     const postResult = await client.query(
-      "INSERT INTO posts (user_id, title, content) VALUES ($1, $2, $3) RETURNING *",
-      [userId, title, content]
+      "INSERT INTO posts (user_id, title, content, image_url) VALUES ($1, $2, $3) RETURNING *",
+      [userId, title, content, imageUrl]
     );
     const newPost = postResult.rows[0];
 
