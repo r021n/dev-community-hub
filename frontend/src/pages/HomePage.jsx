@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import { Link, useSearchParams } from "react-router-dom";
+import { transformCloudinaryUrl } from "../utils/cloudinaryHelper";
 
 const HomePage = () => {
   const [posts, setPosts] = useState([]);
@@ -86,31 +87,50 @@ const HomePage = () => {
               border: "1px solid #ccc",
               padding: "1rem",
               margin: "1rem 0",
+              borderRadius: "8px",
             }}
           >
-            <Link
-              to={`/post/${post.id}`}
-              key={post.id}
-              style={{ textDecoration: "none", color: "inherit" }}
-            >
-              <h3>{post.title}</h3>
-            </Link>
-            <p>
-              by {post.author} - 👍{post.like_count}
-            </p>
-            <div>
-              {post.tags &&
-                post.tags
-                  .filter((t) => t)
-                  .map((tag) => (
-                    <Link
-                      to={`/?tag=${tag}`}
-                      key={tag}
-                      style={{ marginRight: "0.5rem" }}
-                    >
-                      #{tag}{" "}
-                    </Link>
-                  ))}
+            {post.image_url && (
+              <Link to={`/post/${post.id}`}>
+                <img
+                  src={transformCloudinaryUrl(post.image_url, "thumbnail")}
+                  alt={post.title}
+                  loading="lazy"
+                  style={{
+                    width: "100%",
+                    height: "200px",
+                    objectFit: "cover",
+                    borderRadius: "8px 8px 0 0",
+                    marginBottom: "1rem",
+                  }}
+                />
+              </Link>
+            )}
+            <div style={{ padding: "0 0.5rem" }}>
+              <Link
+                to={`/post/${post.id}`}
+                key={post.id}
+                style={{ textDecoration: "none", color: "inherit" }}
+              >
+                <h3>{post.title}</h3>
+              </Link>
+              <p>
+                by {post.author} - 👍{post.like_count}
+              </p>
+              <div>
+                {post.tags &&
+                  post.tags
+                    .filter((t) => t)
+                    .map((tag) => (
+                      <Link
+                        to={`/?tag=${tag}`}
+                        key={tag}
+                        style={{ marginRight: "0.5rem" }}
+                      >
+                        #{tag}{" "}
+                      </Link>
+                    ))}
+              </div>
             </div>
           </div>
         ))

@@ -4,7 +4,7 @@ const getAllPosts = async (options = {}) => {
   const { searchTerm, tag } = options;
   let query = `
     SELECT
-      p.id, p.title, p.content, p.created_at, p.user_id,
+      p.id, p.title, p.content, p.created_at, p.user_id, p.image_url,
       u.username AS author,
       COUNT(DISTINCT l.user_id) as like_count,
       COALESCE(
@@ -51,7 +51,7 @@ const getAllPosts = async (options = {}) => {
 const getPostById = async (postId) => {
   const { rows } = await db.query(
     `
-    SELECT p.id, p.title, p.content, p.created_at, p.user_id,
+    SELECT p.id, p.title, p.content, p.created_at, p.user_id, p.image_url,
       u.username AS author,
       (SELECT COUNT(*) FROM likes WHERE post_id = p.id) AS like_count,
       ARRAY_AGG(t.name) AS tags

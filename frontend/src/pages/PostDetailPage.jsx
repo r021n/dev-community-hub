@@ -4,6 +4,7 @@ import axios from "axios";
 import { AuthContext } from "../context/AuthContext";
 import Comment from "../components/Comment";
 import CommentForm from "../components/CommentForm";
+import { transformCloudinaryUrl } from "../utils/cloudinaryHelper";
 
 const PostDetailPage = () => {
   const { id } = useParams();
@@ -88,6 +89,20 @@ const PostDetailPage = () => {
   return (
     <div>
       <article>
+        {post.image_url && (
+          <img
+            src={transformCloudinaryUrl(post.image_url, "full")}
+            alt={post.title}
+            loading="lazy"
+            style={{
+              width: "100%",
+              maxHeight: "500px",
+              objectFit: "cover",
+              borderRadius: "8px",
+              marginBottom: "1rem",
+            }}
+          />
+        )}
         <h1>{post.title}</h1>
         <p>
           by <strong>{post.author}</strong> on{" "}
