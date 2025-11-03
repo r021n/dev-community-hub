@@ -92,13 +92,19 @@ const EditPostPage = () => {
         imageUrl: uploadedImageUrl !== null ? uploadedImageUrl : imagePreview, // Kirim URL baru atau URL lama
       };
 
-      await axios.put(`http://localhost:3001/api/posts/${id}`, postData, {
-        headers: { Authorization: `Bearer ${auth.token}` },
-      });
-      navigate(`/post/${id}`);
+      const response = await axios.put(
+        `http://localhost:3001/api/posts/${id}`,
+        postData,
+        { headers: { Authorization: `Bearer ${auth.token}` } }
+      );
+
+      const updatedPost = response.data;
+      navigate(`/post/${updatedPost.id}/${updatedPost.slug}`);
     } catch (error) {
       console.error(error);
       setError("Gagal memperbarui postingan");
+    } finally {
+      setIsUploading(false);
     }
   };
 

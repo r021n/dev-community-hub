@@ -118,7 +118,7 @@ const HomePage = () => {
                 }}
               >
                 {post.image_url && (
-                  <Link to={`/post/${post.id}`}>
+                  <Link to={`/post/${post.id}/${post.slug}`}>
                     <img
                       src={transformCloudinaryUrl(post.image_url, "thumbnail")}
                       alt={post.title}
@@ -135,7 +135,7 @@ const HomePage = () => {
                 )}
                 <div style={{ padding: "0 0.5rem" }}>
                   <Link
-                    to={`/post/${post.id}`}
+                    to={`/post/${post.id}/${post.slug}`}
                     style={{ textDecoration: "none", color: "inherit" }}
                   >
                     <h3>{post.title}</h3>

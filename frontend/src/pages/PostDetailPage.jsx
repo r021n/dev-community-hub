@@ -110,7 +110,7 @@ const PostDetailPage = () => {
         </p>
         {isOwner && (
           <div>
-            <Link to={`/post/${id}/edit`}>
+            <Link to={`/post/${id}/${post.slug}/edit`}>
               <button>Edit post</button>
             </Link>
             <button onClick={handleDelete} style={{ marginLeft: "8px" }}>

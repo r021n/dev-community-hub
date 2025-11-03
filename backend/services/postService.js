@@ -1,4 +1,27 @@
 const db = require("../db");
+const slugify = require("../utils/slugify");
+
+const findUniqueSlug = async (baseSlug) => {
+  let slug = baseSlug;
+  let counter = 1;
+
+  let existing = await db.query("SELECT 1 FROM posts WHERE slug = $1", [slug]);
+
+  while (existing.rows.length > 0) {
+    const likeSlug = `${baseSlug}-%`;
+    const result = await db.query(
+      "SELECT slug FROM posts WHERE slug = $1 OR slug LIKE $2 ORDER BY length(slug) DESC, slug DESC LIMIT 1",
+      [baseSlug, likeSlug]
+    );
+
+    const lastSlug = result.rows.length > 0 ? result.rows[0].slug : baseSlug;
+    const lastNumMatch = lastSlug.match(/-(\d+)$/);
+    counter = lastNumMatch ? parseInt(lastNumMatch[1], 10) + 1 : 1;
+    slug = `${baseSlug}-${counter}`;
+    existing = await db.query("SELECT 1 FROM posts WHERE slug = $1", [slug]);
+  }
+  return slug;
+};
 
 const getAllPosts = async (options = {}) => {
   const { searchTerm, tag, page = 1, limit = 10 } = options;
@@ -6,7 +29,7 @@ const getAllPosts = async (options = {}) => {
 
   let selectQuery = `
     SELECT
-      p.id, p.title, p.content, p.created_at, p.user_id, p.image_url,
+      p.id, p.title, p.content, p.created_at, p.user_id, p.image_url, p.slug,
       u.username AS author,
       COUNT(DISTINCT l.user_id) as like_count,
       COALESCE(
@@ -73,7 +96,7 @@ const getAllPosts = async (options = {}) => {
 const getPostById = async (postId) => {
   const { rows } = await db.query(
     `
-    SELECT p.id, p.title, p.content, p.created_at, p.user_id, p.image_url,
+    SELECT p.id, p.title, p.content, p.created_at, p.user_id, p.image_url, p.slug,
       u.username AS author,
       (SELECT COUNT(*) FROM likes WHERE post_id = p.id) AS like_count,
       ARRAY_AGG(t.name) AS tags
@@ -98,11 +121,13 @@ const createPost = async (
 ) => {
   const client = await db.getClient();
   try {
+    const baseSlug = slugify(title);
+    const uniqueSlug = await findUniqueSlug(baseSlug);
     await client.query("BEGIN");
 
     const postResult = await client.query(
-      "INSERT INTO posts (user_id, title, content, image_url) VALUES ($1, $2, $3, $4) RETURNING *",
-      [userId, title, content, imageUrl]
+      "INSERT INTO posts (user_id, title, content, image_url, slug) VALUES ($1, $2, $3, $4, $5) RETURNING *",
+      [userId, title, content, imageUrl, uniqueSlug]
     );
     const newPost = postResult.rows[0];
 
@@ -140,9 +165,20 @@ const createPost = async (
 };
 
 const updatePost = async (postId, userId, title, content, imageUrl) => {
+  const baseSlug = slugify(title);
+  let uniqueSlug = baseSlug;
+
+  // Cek apakah slug perlu diubah dan unik
+  const currentPost = await db.query("SELECT slug FROM posts WHERE id = $1", [
+    postId,
+  ]);
+  if (!currentPost.rows[0] || currentPost.rows[0].slug !== baseSlug) {
+    uniqueSlug = await findUniqueSlug(baseSlug);
+  }
+
   const result = await db.query(
-    "UPDATE posts SET title = $1, content = $2, image_url = $3 WHERE id = $4 AND user_id = $5",
-    [title, content, imageUrl, postId, userId]
+    "UPDATE posts SET title = $1, content = $2, image_url = $3, slug = $4 WHERE id = $5 AND user_id = $6",
+    [title, content, imageUrl, uniqueSlug, postId, userId]
   );
 
   if (result.rowCount === 0) {

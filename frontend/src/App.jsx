@@ -26,7 +26,7 @@ function App() {
           <Route path="/" element={<HomePage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
-          <Route path="/post/:id" element={<PostDetailPage />} />
+          <Route path="/post/:id/:slug" element={<PostDetailPage />} />
 
           {/* Rute dilindungi */}
           <Route
@@ -38,7 +38,7 @@ function App() {
             element={auth.token ? <CreatePostPage /> : <Navigate to="/login" />}
           />
           <Route
-            path="/post/:id/edit"
+            path="/post/:id/:slug/edit"
             element={auth.token ? <EditPostPage /> : <Navigate to="/login" />}
           />
           <Route

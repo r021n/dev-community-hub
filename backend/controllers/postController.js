@@ -11,9 +11,7 @@ const getPosts = async (req, res) => {
     });
     res.status(200).json(postsData);
   } catch (error) {
-    res
-      .status(500)
-      .json({ message: "Terjadi kesalahan pada server", error: error });
+    res.status(500).json({ message: "Terjadi kesalahan pada server" });
   }
 };
 
@@ -48,7 +46,7 @@ const createPost = async (req, res) => {
     );
     res.status(201).json(newPost);
   } catch (error) {
-    res.status(500).json({ message: "Gagal membuat post" });
+    res.status(500).json({ message: "Gagal membuat post", error: error });
   }
 };
 
