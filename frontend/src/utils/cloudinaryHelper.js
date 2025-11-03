@@ -26,7 +26,5 @@ export const transformCloudinaryUrl = (originalUrl, type = "full") => {
       return originalUrl;
   }
 
-  console.log(`${baseUrl}/upload/${transformation}${imageUrl}`);
-
   return `${baseUrl}/upload/${transformation}${imageUrl}`;
 };

@@ -1,8 +1,10 @@
 const db = require("../db");
 
 const getAllPosts = async (options = {}) => {
-  const { searchTerm, tag } = options;
-  let query = `
+  const { searchTerm, tag, page = 1, limit = 10 } = options;
+  const offset = (page - 1) * limit;
+
+  let selectQuery = `
     SELECT
       p.id, p.title, p.content, p.created_at, p.user_id, p.image_url,
       u.username AS author,
@@ -18,8 +20,10 @@ const getAllPosts = async (options = {}) => {
     LEFT JOIN tags t ON pt.tag_id = t.id
     `;
 
+  let countQuery = `SELECT COUNT(DISTINCT p.id) FROM posts p`;
+
   const queryParams = [];
-  let whereClauses = [];
+  const whereClauses = [];
 
   if (searchTerm) {
     queryParams.push(searchTerm);
@@ -36,16 +40,34 @@ const getAllPosts = async (options = {}) => {
   }
 
   if (whereClauses.length > 0) {
-    query += " WHERE " + whereClauses.join(" AND ");
+    const whereString = " WHERE " + whereClauses.join(" AND ");
+    selectQuery += whereString;
+
+    if (tag) {
+      countQuery += `
+        LEFT JOIN post_tags pt ON p.id = pt.post_id
+        LEFT JOIN tags t ON pt.tag_id = t.id
+      `;
+    }
+    countQuery += whereString;
   }
 
-  query += `
+  selectQuery += `
     GROUP BY p.id, u.username
     ORDER BY p.created_at DESC
+    LIMIT $${queryParams.length + 1}
+    OFFSET $${queryParams.length + 2}
   `;
 
-  const { rows } = await db.query(query, queryParams);
-  return rows;
+  const postsResult = await db.query(selectQuery, [
+    ...queryParams,
+    limit,
+    offset,
+  ]);
+  const totalResult = await db.query(countQuery, queryParams);
+
+  const totalPosts = parseInt(totalResult.rows[0].count, 10);
+  return { posts: postsResult.rows, totalPosts, page, limit };
 };
 
 const getPostById = async (postId) => {

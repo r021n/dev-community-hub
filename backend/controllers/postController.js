@@ -1,12 +1,19 @@
 const postService = require("../services/postService");
 
 const getPosts = async (req, res) => {
-  const { search, tag } = req.query;
+  const { search, tag, page = 1, limit = 10 } = req.query;
   try {
-    const post = await postService.getAllPosts({ searchTerm: search, tag });
-    res.status(200).json(post);
+    const postsData = await postService.getAllPosts({
+      searchTerm: search,
+      tag,
+      page: parseInt(page),
+      limit: parseInt(limit),
+    });
+    res.status(200).json(postsData);
   } catch (error) {
-    res.status(500).json({ message: "Terjadi kesalahan pada server" });
+    res
+      .status(500)
+      .json({ message: "Terjadi kesalahan pada server", error: error });
   }
 };
 

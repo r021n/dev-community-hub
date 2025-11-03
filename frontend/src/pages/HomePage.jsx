@@ -1,142 +1,172 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import axios from "axios";
 import { Link, useSearchParams } from "react-router-dom";
 import { transformCloudinaryUrl } from "../utils/cloudinaryHelper";
 
 const HomePage = () => {
   const [posts, setPosts] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+
   const [searchTerm, setSearchTerm] = useState("");
-  const [hasInteracted, setHasInteracted] = useState(false);
   const [searchParams, setSearchParams] = useSearchParams();
-  const inputRef = useRef(null);
+
+  const observer = useRef();
+  const lastPostElementRef = useCallback(
+    (node) => {
+      if (loading) return;
+      if (observer.current) observer.current.disconnect();
+      observer.current = new IntersectionObserver((entries) => {
+        if (entries[0].isIntersecting && hasMore) {
+          setPage((prevPage) => prevPage + 1);
+        }
+      });
+      if (node) observer.current.observe(node);
+    },
+    [loading, hasMore]
+  );
+
+  const fetchPosts = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const currentSearch = searchParams.get("search") || "";
+      const currentTag = searchParams.get("tag") || "";
+
+      const response = await axios.get("http://localhost:3001/api/posts", {
+        params: { search: currentSearch, tag: currentTag, page },
+      });
+
+      setPosts((prevPosts) => {
+        const newPosts = response.data.posts.filter(
+          (p) => !prevPosts.some((pp) => pp.id === p.id)
+        );
+        return [...prevPosts, ...newPosts];
+      });
+
+      setHasMore(
+        posts.length + response.data.posts.length < response.data.totalPosts
+      );
+    } catch (error) {
+      setError("Gagal memuat postingan");
+      console.error(error);
+    } finally {
+      setLoading(false);
+    }
+  }, [page, searchParams]);
 
   useEffect(() => {
-    const fetchPosts = async () => {
-      try {
-        setLoading(true);
-        const currentSearch = searchParams.get("search") || "";
-        const currentTag = searchParams.get("tag") || "";
-
-        const response = await axios.get("http://localhost:3001/api/posts", {
-          params: { search: currentSearch, tag: currentTag },
-        });
-        setPosts(response.data);
-      } catch (error) {
-        setError("Gagal memuat postingan");
-        console.error(error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchPosts();
+  }, [fetchPosts]);
+
+  useEffect(() => {
+    setPosts([]);
+    setPage(1);
+    setHasMore(true);
   }, [searchParams]);
 
   useEffect(() => {
     const handler = setTimeout(() => {
       if (searchTerm.trim() === "") {
-        setSearchParams({});
+        const newParams = new URLSearchParams(searchParams);
+        newParams.delete("search");
+        setSearchParams(newParams);
       } else {
-        setSearchParams({ search: searchTerm });
+        setSearchParams({
+          ...Object.fromEntries(searchParams),
+          search: searchTerm,
+        });
       }
     }, 1200);
 
     return () => clearTimeout(handler);
-  }, [searchTerm, setSearchParams]);
+  }, [searchTerm, setSearchParams, searchParams]);
 
   useEffect(() => {
     const initial = searchParams.get("search") || "";
-    if (initial && searchTerm === "") {
-      setSearchTerm(initial);
-    }
-  }, [searchParams]);
-
-  useEffect(() => {
-    if (hasInteracted && inputRef.current) {
-      inputRef.current.focus();
-    }
-  }, [posts, hasInteracted]);
-
-  if (loading) return <p>loading...</p>;
-  if (error) return <p style={{ color: "red" }}>{error}</p>;
+    setSearchTerm(initial);
+  }, []);
 
   return (
     <div>
       <div style={{ marginBottom: "2rem" }}>
         <input
-          ref={inputRef}
           type="text"
           placeholder="search post"
           value={searchTerm}
           onChange={(e) => {
-            setHasInteracted(true);
             setSearchTerm(e.target.value);
           }}
-          onFocus={() => setHasInteracted(true)}
           style={{ padding: "0.5rem", width: "300px" }}
         />
       </div>
       <h2>Recent Posts</h2>
-      {posts.length > 0 ? (
-        posts.map((post) => (
-          <div
-            key={post.id}
-            style={{
-              border: "1px solid #ccc",
-              padding: "1rem",
-              margin: "1rem 0",
-              borderRadius: "8px",
-            }}
-          >
-            {post.image_url && (
-              <Link to={`/post/${post.id}`}>
-                <img
-                  src={transformCloudinaryUrl(post.image_url, "thumbnail")}
-                  alt={post.title}
-                  loading="lazy"
-                  style={{
-                    width: "100%",
-                    height: "200px",
-                    objectFit: "cover",
-                    borderRadius: "8px 8px 0 0",
-                    marginBottom: "1rem",
-                  }}
-                />
-              </Link>
-            )}
-            <div style={{ padding: "0 0.5rem" }}>
-              <Link
-                to={`/post/${post.id}`}
-                key={post.id}
-                style={{ textDecoration: "none", color: "inherit" }}
+      {posts.length > 0
+        ? posts.map((post, index) => {
+            const isLastElement = posts.length === index + 1;
+            return (
+              <div
+                ref={isLastElement ? lastPostElementRef : null}
+                key={`${post.id}-${index}`}
+                style={{
+                  border: "1px solid #ccc",
+                  padding: "1rem",
+                  margin: "1rem 0",
+                  borderRadius: "8px",
+                }}
               >
-                <h3>{post.title}</h3>
-              </Link>
-              <p>
-                by {post.author} - 👍{post.like_count}
-              </p>
-              <div>
-                {post.tags &&
-                  post.tags
-                    .filter((t) => t)
-                    .map((tag) => (
-                      <Link
-                        to={`/?tag=${tag}`}
-                        key={tag}
-                        style={{ marginRight: "0.5rem" }}
-                      >
-                        #{tag}{" "}
-                      </Link>
-                    ))}
+                {post.image_url && (
+                  <Link to={`/post/${post.id}`}>
+                    <img
+                      src={transformCloudinaryUrl(post.image_url, "thumbnail")}
+                      alt={post.title}
+                      loading="lazy"
+                      style={{
+                        width: "100%",
+                        height: "200px",
+                        objectFit: "cover",
+                        borderRadius: "8px 8px 0 0",
+                        marginBottom: "1rem",
+                      }}
+                    />
+                  </Link>
+                )}
+                <div style={{ padding: "0 0.5rem" }}>
+                  <Link
+                    to={`/post/${post.id}`}
+                    style={{ textDecoration: "none", color: "inherit" }}
+                  >
+                    <h3>{post.title}</h3>
+                  </Link>
+                  <p>
+                    by {post.author} - 👍{post.like_count}
+                  </p>
+                  <div>
+                    {post.tags &&
+                      post.tags
+                        .filter((t) => t)
+                        .map((tag) => (
+                          <Link
+                            to={`/?tag=${tag}`}
+                            key={tag}
+                            style={{ marginRight: "0.5rem" }}
+                          >
+                            #{tag}{" "}
+                          </Link>
+                        ))}
+                  </div>
+                </div>
               </div>
-            </div>
-          </div>
-        ))
-      ) : (
-        <p>Belum ada post</p>
+            );
+          })
+        : !loading && <p>Belum ada post yang cocok.</p>}
+      {loading && <p>Loading...</p>}
+      {!hasMore && !loading && posts.length > 0 && (
+        <p>Anda telah mencapai akhir daftar.</p>
       )}
+      {error && <p style={{ color: "red" }}>{error}</p>}
     </div>
   );
 };
