@@ -46,7 +46,7 @@ const createPost = async (req, res) => {
 };
 
 const editPost = async (req, res) => {
-  const { title, content } = req.body;
+  const { title, content, imageUrl } = req.body;
   const postId = req.params.id;
   const userId = req.user.id;
 
@@ -55,7 +55,8 @@ const editPost = async (req, res) => {
       postId,
       userId,
       title,
-      content
+      content,
+      imageUrl
     );
     res.status(200).json(updatedPost);
   } catch (error) {

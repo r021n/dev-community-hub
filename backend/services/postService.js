@@ -117,10 +117,10 @@ const createPost = async (
   }
 };
 
-const updatePost = async (postId, userId, title, content) => {
+const updatePost = async (postId, userId, title, content, imageUrl) => {
   const result = await db.query(
-    "UPDATE posts SET title = $1, content = $2 WHERE id = $3 AND user_id = $4",
-    [title, content, postId, userId]
+    "UPDATE posts SET title = $1, content = $2, image_url = $3 WHERE id = $4 AND user_id = $5",
+    [title, content, imageUrl, postId, userId]
   );
 
   if (result.rowCount === 0) {

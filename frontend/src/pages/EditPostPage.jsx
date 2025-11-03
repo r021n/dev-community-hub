@@ -2,6 +2,7 @@ import React, { useState, useEffect, useContext } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { AuthContext } from "../context/AuthContext";
+import imageCompression from "browser-image-compression";
 
 const EditPostPage = () => {
   const { id } = useParams();
@@ -12,6 +13,9 @@ const EditPostPage = () => {
   const [content, setContent] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
+  const [imageFile, setImageFile] = useState(null);
+  const [imagePreview, setImagePreview] = useState("");
+  const [isUploading, setIsUploading] = useState(false);
 
   useEffect(() => {
     const fetchPost = async () => {
@@ -21,6 +25,9 @@ const EditPostPage = () => {
         );
         setTitle(response.data.title);
         setContent(response.data.content);
+        if (response.data.image_url) {
+          setImagePreview(response.data.image_url);
+        }
 
         if (auth.user.id !== response.data.user_id) {
           navigate("/");
@@ -38,14 +45,56 @@ const EditPostPage = () => {
     }
   }, [auth.user.id, id, navigate, auth.token]);
 
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setImageFile(file);
+      setImagePreview(URL.createObjectURL(file));
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setIsUploading(true);
+    setError("");
+    let uploadedImageUrl = null;
+
     try {
-      await axios.put(
-        `http://localhost:3001/api/posts/${id}`,
-        { title, content },
-        { headers: { Authorization: `Bearer ${auth.token}` } }
-      );
+      // Jika ada file gambar baru yang dipilih
+      if (imageFile) {
+        const options = {
+          maxSizeMB: 1,
+          maxWidthOrHeight: 1920,
+          useWebWorker: true,
+        };
+
+        const compressedFile = await imageCompression(imageFile, options);
+
+        const formData = new FormData();
+        formData.append("image", compressedFile, compressedFile.name);
+
+        const uploadRes = await axios.post(
+          "http://localhost:3001/api/posts/upload-image",
+          formData,
+          {
+            headers: {
+              "Content-Type": "multipart/form-data",
+              Authorization: `Bearer ${auth.token}`,
+            },
+          }
+        );
+        uploadedImageUrl = uploadRes.data.imageUrl;
+      }
+
+      const postData = {
+        title,
+        content,
+        imageUrl: uploadedImageUrl !== null ? uploadedImageUrl : imagePreview, // Kirim URL baru atau URL lama
+      };
+
+      await axios.put(`http://localhost:3001/api/posts/${id}`, postData, {
+        headers: { Authorization: `Bearer ${auth.token}` },
+      });
       navigate(`/post/${id}`);
     } catch (error) {
       console.error(error);
@@ -77,8 +126,30 @@ const EditPostPage = () => {
             rows="10"
           ></textarea>
         </div>
+        <div>
+          <label>Gambar (opsional) :</label>
+          <input
+            type="file"
+            accept="image/png, image/jpeg, image/gif"
+            onChange={handleImageChange}
+          />
+        </div>
+
+        {imagePreview && (
+          <div style={{ marginTop: "1rem" }}>
+            <p>Preview</p>
+            <img
+              src={imagePreview}
+              alt="Preview"
+              style={{ maxWidth: "300px", height: "auto" }}
+            />
+          </div>
+        )}
+
         {error && <p style={{ color: "red" }}>{error}</p>}
-        <button type="submit">Simpan Perubahan</button>
+        <button type="submit" disabled={isUploading}>
+          {isUploading ? "Menyimpan..." : "Simpan Perubahan"}
+        </button>
       </form>
     </div>
   );
