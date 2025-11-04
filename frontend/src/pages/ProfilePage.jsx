@@ -11,10 +11,12 @@ const ProfilePage = () => {
   const { username } = useParams(); // Mengambil username dari URL
 
   useEffect(() => {
+    if (!auth.token) return;
     const fetchProfile = async () => {
       setLoading(true);
       try {
         // Menggunakan endpoint baru dengan username
+        console.log(auth.token);
         const response = await axios.get(
           `http://localhost:3001/api/users/profile/${username}`,
           { headers: { Authorization: `Bearer ${auth.token}` } }
@@ -33,7 +35,6 @@ const ProfilePage = () => {
     fetchProfile();
   }, [username, auth.token]);
 
-  // Jika user belum login, tampilkan pesan ini
   if (!auth.token) {
     return (
       <div>
@@ -54,6 +55,9 @@ const ProfilePage = () => {
     return <p style={{ color: "red" }}>{error}</p>;
   }
 
+  if (!profile) {
+    return <p>Profil tidak ditemukan atau sedang dimuat...</p>;
+  }
   return (
     <div>
       <h2>Profil {profile.username}</h2>
