@@ -17,4 +17,21 @@ const getProfile = async (req, res) => {
   }
 };
 
-module.exports = { getProfile };
+const getPublicProfile = async (req, res) => {
+  const { username } = req.params;
+
+  try {
+    const profile = await userService.getUserProfileByUsername(username);
+
+    if (!profile) {
+      return res.status(404).json({ message: "User tidak ditemukan" });
+    }
+
+    res.status(200).json(profile);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Server error saat mengambil profile" });
+  }
+};
+
+module.exports = { getProfile, getPublicProfile };

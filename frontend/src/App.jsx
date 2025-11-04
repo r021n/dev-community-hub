@@ -27,12 +27,9 @@ function App() {
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
           <Route path="/post/:id/:slug" element={<PostDetailPage />} />
+          <Route path="/profile/:username" element={<ProfilePage />} />
 
           {/* Rute dilindungi */}
-          <Route
-            path="/profile"
-            element={auth.token ? <ProfilePage /> : <Navigate to="/login" />}
-          />
           <Route
             path="/create-post"
             element={auth.token ? <CreatePostPage /> : <Navigate to="/login" />}

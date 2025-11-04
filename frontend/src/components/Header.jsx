@@ -93,7 +93,7 @@ const Header = () => {
               <>
                 <li>
                   <Link
-                    to="/profile"
+                    to={`/profile/${auth.user.username}`}
                     style={{ color: "white", textDecoration: "none" }}
                   >
                     Profil
