@@ -1,4 +1,4 @@
-const db = require("../db");
+const db = require("../db/db");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 
@@ -7,18 +7,15 @@ const registerUser = async (username, password) => {
   const passwordHash = await bcrypt.hash(password, saltRounds);
 
   // simpan user
-  const { rows } = await db.query(
-    "INSERT INTO users (username, password) VALUES ($1, $2) RETURNING id, username",
-    [username, passwordHash]
-  );
-  return rows[0];
+  const [user] = await db("users")
+    .insert({ username, password: passwordHash })
+    .returning(["id", "username"]);
+
+  return user;
 };
 
 const loginUser = async (username, password) => {
-  const { rows } = await db.query("SELECT * FROM users WHERE username = $1", [
-    username,
-  ]);
-  const user = rows[0];
+  const user = await db("users").where({ username }).first();
 
   if (!user) {
     throw new Error("User tidak ditemukan");

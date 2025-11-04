@@ -1,27 +1,26 @@
-const db = require("../db");
+const db = require("../db/db");
 
 const getUserById = async (userId) => {
-  const { rows } = await db.query(
-    "SELECT id, username, created_at FROM users WHERE id = $1",
-    [userId]
-  );
+  const user = await db("users")
+    .select("id", "username", "created_at")
+    .where({ id: userId })
+    .first();
 
-  return rows[0];
+  return user;
 };
 
 const getUserProfileByUsername = async (username) => {
-  const { rows: userRows } = await db.query(
-    "SELECT id, username, created_at FROM users WHERE username = $1",
-    [username]
-  );
+  const user = await db("users")
+    .select("id", "username", "created_at")
+    .where({ username })
+    .first();
 
-  const user = userRows[0];
   if (!user) return null;
 
-  const { rows: posts } = await db.query(
-    "SELECT id, slug, title, content, created_at FROM posts WHERE user_id = $1 ORDER BY created_at DESC",
-    [user.id]
-  );
+  const posts = await db("posts")
+    .select("id", "slug", "title", "content", "created_at")
+    .where({ user_id: user.id })
+    .orderBy("created_at", "desc");
 
   return { ...user, posts };
 };

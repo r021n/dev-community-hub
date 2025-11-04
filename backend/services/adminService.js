@@ -1,23 +1,18 @@
-const db = require("../db");
+const db = require("../db/db");
 
 const getDashboardStats = async () => {
-  const userCountPromise = db.query("SELECT COUNT(*) FROM users");
-  const postCountPromise = db.query("SELECT COUNT(*) FROM posts");
-  const commentCountPromise = db.query("SELECT COUNT(*) FROM comments");
-  const likeCountPromise = db.query("SELECT COUNT(*) FROM likes");
-
   const [userRes, postRes, commentRes, likeRes] = await Promise.all([
-    userCountPromise,
-    postCountPromise,
-    commentCountPromise,
-    likeCountPromise,
+    db("users").count("* as count").first(),
+    db("posts").count("* as count").first(),
+    db("comments").count("* as count").first(),
+    db("likes").count("* as count").first(),
   ]);
 
   return {
-    totalUsers: parseInt(userRes.rows[0].count, 10),
-    totalPosts: parseInt(postRes.rows[0].count, 10),
-    totalComments: parseInt(commentRes.rows[0].count, 10),
-    totalLikes: parseInt(likeRes.rows[0].count, 10),
+    totalUsers: parseInt(userRes.count, 10),
+    totalPosts: parseInt(postRes.count, 10),
+    totalComments: parseInt(commentRes.count, 10),
+    totalLikes: parseInt(likeRes.count, 10),
   };
 };
 

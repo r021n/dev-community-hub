@@ -1,22 +1,15 @@
-const db = require("../db");
+const db = require("../db/db");
 
 const toggleLike = async (userId, postId) => {
-  const existingLike = await db.query(
-    "SELECT * FROM likes WHERE user_id = $1 AND post_id = $2",
-    [userId, postId]
-  );
+  const existingLike = await db("likes")
+    .where({ user_id: userId, post_id: postId })
+    .first();
 
-  if (existingLike.rows.length > 0) {
-    await db.query("DELETE FROM likes WHERE user_id = $1 AND post_id = $2", [
-      userId,
-      postId,
-    ]);
+  if (existingLike) {
+    await db("likes").where({ user_id: userId, post_id: postId }).del();
     return { liked: false };
   } else {
-    await db.query("INSERT INTO likes (user_id, post_id) VALUES ($1, $2)", [
-      userId,
-      postId,
-    ]);
+    await db("likes").insert({ user_id: userId, post_id: postId });
     return { liked: true };
   }
 };

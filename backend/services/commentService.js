@@ -1,4 +1,4 @@
-const db = require("../db");
+const db = require("../db/db");
 
 const buildCommentTree = (comments) => {
   const commentMap = [];
@@ -22,55 +22,46 @@ const buildCommentTree = (comments) => {
 };
 
 const getCommentsByPostId = async (postId) => {
-  const { rows } = await db.query(
-    `
-    SELECT c.*, u.username
-    FROM comments c
-    JOIN users u ON c.user_id = u.id
-    WHERE c.post_id = $1
-    ORDER BY c.created_at ASC
-    `,
-    [postId]
-  );
-  return buildCommentTree(rows);
+  const comments = await db("comments as c")
+    .join("users as u", "c.user_id", "u.id")
+    .select("c.*", "u.username")
+    .where("c.post_id", postId)
+    .orderBy("c.created_at", "asc");
+
+  return buildCommentTree(comments);
 };
 
 const createComment = async (postId, userId, content, parentId = null) => {
-  // const { rows } = await db.query(
-  //   "INSERT INTO comments (post_id, user_id, content, parent_id) VALUES ($1, $2, $3, $4) RETURNING *",
-  //   [postId, userId, content, parentId]
-  // );
-  // return rows[0];
+  // gunakan transaksi knex
+  return await db.transaction(async (trx) => {
+    // insert comment
+    const [newComment] = await trx("comments")
+      .insert({
+        post_id: postId,
+        user_id: userId,
+        content,
+        parent_id: parentId,
+      })
+      .returning("*");
 
-  const client = await db.getClient(); // Pastikan client diawait
-  try {
-    await client.query("BEGIN");
-    const commentResult = await client.query(
-      "INSERT INTO comments (post_id, user_id, content, parent_id) VALUES ($1, $2, $3, $4) RETURNING *",
-      [postId, userId, content, parentId]
-    );
-    const newComment = commentResult.rows[0]; // Komentar baru yang berhasil dibuat
+    // ambil owner post
+    const postOwner = await trx("posts")
+      .select("user_id")
+      .where({ id: postId })
+      .first();
 
-    const postOwnerResult = await client.query(
-      "SELECT user_id FROM posts WHERE id = $1",
-      [postId]
-    );
-    const postOwnerId = postOwnerResult.rows[0].user_id;
+    // ambil username commenter
+    const commenter = await trx("users")
+      .select("username")
+      .where({ id: userId })
+      .first();
 
-    const commenterResult = await client.query(
-      "SELECT username FROM users WHERE id = $1",
-      [userId]
-    );
-    const commenterUsername = commenterResult.rows[0].username;
-
-    await client.query("COMMIT");
-    return { newComment, postOwnerId, commenterUsername };
-  } catch (error) {
-    await client.query("ROLLBACK");
-    throw error;
-  } finally {
-    client.release();
-  }
+    return {
+      newComment,
+      postOwnerId: postOwner.user_id,
+      commenterUsername: commenter.username,
+    };
+  });
 };
 
 module.exports = { getCommentsByPostId, createComment, buildCommentTree };
