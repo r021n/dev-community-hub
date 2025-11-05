@@ -1,4 +1,5 @@
 const commentService = require("../services/commentService");
+const postService = require("../services/postService");
 
 const getComments = async (req, res) => {
   try {
@@ -22,10 +23,12 @@ const postComment = async (req, res) => {
 
     if (postOwnerId !== userId) {
       const socketId = req.getSocketId(postOwnerId);
-      if (socketId) {
+      const post = await postService.getPostById(postId);
+      if (socketId && post) {
         req.io.to(socketId).emit("newNotification", {
           message: `${commenterUsername} mengomentari postingan anda`,
           postId: postId,
+          slug: post.slug,
         });
       }
     }

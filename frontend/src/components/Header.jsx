@@ -40,7 +40,7 @@ const Header = () => {
             textAlign: "center",
           }}
         >
-          <Link to={`/post/${notification.postId}`}>
+          <Link to={`/post/${notification.postId}/${notification.slug}`}>
             {notification.message}
           </Link>
         </div>
