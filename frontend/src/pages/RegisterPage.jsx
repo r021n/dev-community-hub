@@ -1,6 +1,7 @@
 import React, { useState } from "react";
-import axios from "axios";
 import { useNavigate, Link } from "react-router-dom";
+import FormField from "../components/FormField";
+import { registerApi } from "../api/api";
 
 const RegisterPage = () => {
   const [username, setUsername] = useState("");
@@ -20,26 +21,16 @@ const RegisterPage = () => {
     }
 
     try {
-      await axios.post("http://localhost:3001/api/auth/register", {
-        username,
-        password,
-      });
-
+      await registerApi(username, password);
       setSuccess("Registrasi berhasil, anda akan diarahkan ke halaman login");
-
       setTimeout(() => {
         navigate("/login");
       }, 2000);
     } catch (error) {
-      if (
-        error.response &&
-        error.response.data &&
-        error.response.data.message
-      ) {
-        setError(error.response.data.message);
-      } else {
-        setError("Terjadi kesalahan saat registrasi, silahkan coba lagi nanti");
-      }
+      const respMsg = error?.response?.data?.message;
+      setError(
+        respMsg || "Terjadi kesalahan saat registrasi. Silahkan coba lagi nanti"
+      );
     }
   };
 
@@ -47,24 +38,17 @@ const RegisterPage = () => {
     <div>
       <h2>Register</h2>
       <form onSubmit={handleSubmit}>
-        <div>
-          <label>Username:</label>
-          <input
-            type="text"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-            required
-          />
-        </div>
-        <div>
-          <label>Password</label>
-          <input
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-          />
-        </div>
+        <FormField
+          label="Username:"
+          value={username}
+          onChange={(e) => setUsername(e.target.value)}
+        />
+        <FormField
+          label="Password:"
+          type="password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+        />
         {error && <p style={{ color: "red" }}>{error}</p>}
         {success && <p style={{ color: "green" }}>{success}</p>}
         <button type="submit">Register</button>

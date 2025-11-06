@@ -1,7 +1,8 @@
 import React, { useState, useContext, useEffect } from "react";
-import axios from "axios";
 import { AuthContext } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
+import FormField from "../components/FormField";
+import { loginApi } from "../api/api";
 
 const LoginPage = () => {
   const [username, setUsername] = useState("");
@@ -18,11 +19,9 @@ const LoginPage = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setError("");
     try {
-      const response = await axios.post(
-        "http://localhost:3001/api/auth/login",
-        { username, password }
-      );
+      const response = await loginApi(username, password);
       login(response.data.token);
       navigate("/");
     } catch (error) {
@@ -35,24 +34,17 @@ const LoginPage = () => {
     <div>
       <h2>Login</h2>
       <form onSubmit={handleSubmit}>
-        <div>
-          <label>Username:</label>
-          <input
-            type="text"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-            required
-          />
-        </div>
-        <div>
-          <label>Password:</label>
-          <input
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-          />
-        </div>
+        <FormField
+          label="username"
+          value={username}
+          onChange={(e) => setUsername(e.target.value)}
+        />
+        <FormField
+          label="Password"
+          type="password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+        />
         {error && <p style={{ color: "red" }}>{error}</p>}
         <button type="submit">Login</button>
       </form>
