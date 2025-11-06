@@ -2,7 +2,7 @@ import React from "react";
 import { Link } from "react-router-dom";
 import { transformCloudinaryUrl } from "../utils/cloudinaryHelper";
 
-const PostCard = ({ post }) => {
+const PostCard = ({ post, showAuthor = true }) => {
   return (
     <div
       key={post.id}
@@ -38,7 +38,13 @@ const PostCard = ({ post }) => {
           {post.title}
         </Link>
         <p>
-          by {post.author} - 👍{post.like_count}
+          {showAuthor ? (
+            <>
+              by {post.author} - 👍{post.like_count}
+            </>
+          ) : (
+            <>👍{post.like_count}</>
+          )}
         </p>
         <div>
           {post.tags &&

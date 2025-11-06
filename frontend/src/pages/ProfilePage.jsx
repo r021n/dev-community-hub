@@ -71,7 +71,9 @@ const ProfilePage = () => {
       <hr />
       <h3>Postingan oleh {profile.username}</h3>
       {profile.posts && profile.posts.length > 0 ? (
-        profile.posts.map((post) => <PostCard key={post.id} post={post} />)
+        profile.posts.map((post) => (
+          <PostCard key={post.id} post={post} showAuthor={false} />
+        ))
       ) : (
         <p>Pengguna ini belum membuat postingan apapun.</p>
       )}
