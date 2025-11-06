@@ -1,10 +1,3 @@
-/**
- * Mengubah URL Cloudinary untuk menerapkan transformasi optimasi.
- * @param {string} originalUrl URL asli dari Cloudinary.
- * @param {'thumbnail' | 'full'} type Jenis transformasi yang diinginkan.
- * @returns {string} URL baru dengan parameter transformasi.
- */
-
 export const transformCloudinaryUrl = (originalUrl, type = "full") => {
   if (!originalUrl) return null;
 

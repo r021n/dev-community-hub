@@ -18,7 +18,7 @@ const getUserProfileByUsername = async (username) => {
   if (!user) return null;
 
   const posts = await db("posts")
-    .select("id", "slug", "title", "content", "created_at")
+    .select("id", "slug", "title", "image_url", "content", "created_at")
     .where({ user_id: user.id })
     .orderBy("created_at", "desc");
 

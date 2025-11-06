@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useContext } from "react";
 import { useParams, Link } from "react-router-dom";
-import axios from "axios";
 import { AuthContext } from "../context/AuthContext";
+import { getUserProfile } from "../api/api";
+import PostCard from "../components/PostCard";
 
 const ProfilePage = () => {
   const [profile, setProfile] = useState(null);
@@ -17,10 +18,7 @@ const ProfilePage = () => {
       try {
         // Menggunakan endpoint baru dengan username
         console.log(auth.token);
-        const response = await axios.get(
-          `http://localhost:3001/api/users/profile/${username}`,
-          { headers: { Authorization: `Bearer ${auth.token}` } }
-        );
+        const response = await getUserProfile(username, auth.token);
         setProfile(response.data);
       } catch (error) {
         console.error(error);
@@ -73,21 +71,7 @@ const ProfilePage = () => {
       <hr />
       <h3>Postingan oleh {profile.username}</h3>
       {profile.posts && profile.posts.length > 0 ? (
-        profile.posts.map((post) => (
-          <div
-            key={post.id}
-            style={{
-              border: "1px solid #ccc",
-              padding: "10px",
-              margin: "10px 0",
-            }}
-          >
-            <h4>
-              <Link to={`/post/${post.id}/${post.slug}`}>{post.title}</Link>
-            </h4>
-            <p>Dibuat pada: {new Date(post.created_at).toLocaleDateString()}</p>
-          </div>
-        ))
+        profile.posts.map((post) => <PostCard key={post.id} post={post} />)
       ) : (
         <p>Pengguna ini belum membuat postingan apapun.</p>
       )}
