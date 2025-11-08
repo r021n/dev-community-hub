@@ -3,14 +3,17 @@ import { useParams, useNavigate } from "react-router-dom";
 import { AuthContext } from "../context/AuthContext";
 import useImageUpload from "../hooks/useImageUpload";
 import { getPost, updatePost } from "../api/api";
+import PostForm from "../components/PostForm";
 
 const EditPostPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { auth } = useContext(AuthContext);
 
-  const [title, setTitle] = useState("");
-  const [content, setContent] = useState("");
+  const [postData, setPostData] = useState({
+    title: "",
+    content: "",
+  });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
 
@@ -27,8 +30,10 @@ const EditPostPage = () => {
     const fetchPost = async () => {
       try {
         const response = await getPost(id);
-        setTitle(response.data.title);
-        setContent(response.data.content);
+        setPostData({
+          title: response.data.title,
+          content: response.data.content,
+        });
         if (response.data.image_url) {
           setImagePreview(response.data.image_url);
         }
@@ -47,21 +52,20 @@ const EditPostPage = () => {
     if (auth.token) {
       fetchPost();
     }
-  }, [auth.user.id, id, navigate, auth.token]);
+  }, [auth.user.id, id, navigate, auth.token, setImagePreview]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
 
     try {
-      // Jika ada file gambar baru yang dipilih
-      const uploadedImageUrl = await upload(auth.token); // null jika tidak ada file baru
-      const postData = {
-        title,
-        content,
+      const uploadedImageUrl = await upload(auth.token);
+      const uploadedPostData = {
+        title: postData.title,
+        content: postData.content,
         imageUrl: uploadedImageUrl !== null ? uploadedImageUrl : imagePreview,
       };
-      const resp = await updatePost(id, postData, auth.token);
+      const resp = await updatePost(id, uploadedPostData, auth.token);
       const updatedPost = resp.data;
       navigate(`/post/${updatedPost.id}/${updatedPost.slug}`);
     } catch (error) {
@@ -75,51 +79,17 @@ const EditPostPage = () => {
   return (
     <div>
       <h2>Edit Postingan</h2>
-      <form onSubmit={handleSubmit}>
-        <div>
-          <label>Judul</label>
-          <input
-            type="text"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            required
-          />
-        </div>
-        <div>
-          <label>Konten</label>
-          <textarea
-            value={content}
-            onChange={(e) => setContent(e.target.value)}
-            required
-            rows="10"
-          ></textarea>
-        </div>
-        <div>
-          <label>Gambar (opsional) :</label>
-          <input
-            type="file"
-            accept="image/png, image/jpeg, image/gif"
-            onChange={handleImageChange}
-          />
-        </div>
-
-        {imagePreview && (
-          <div style={{ marginTop: "1rem" }}>
-            <p>Preview</p>
-            <img
-              src={imagePreview}
-              alt="Preview"
-              style={{ maxWidth: "300px", height: "auto" }}
-            />
-          </div>
-        )}
-
-        {error ||
-          (imageError && <p style={{ color: "red" }}>{error || imageError}</p>)}
-        <button type="submit" disabled={isUploading}>
-          {isUploading ? "Menyimpan..." : "Simpan Perubahan"}
-        </button>
-      </form>
+      <PostForm
+        postData={postData}
+        setPostData={setPostData}
+        handleSubmit={handleSubmit}
+        handleImageChange={handleImageChange}
+        imagePreview={imagePreview}
+        isSubmitting={isUploading}
+        error={error || imageError}
+        submitText="Simpan Perubahan"
+        loadingText="Menyimpan..."
+      />
     </div>
   );
 };

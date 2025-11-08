@@ -4,11 +4,14 @@ import { AuthContext } from "../context/AuthContext";
 import useImageUpload from "../hooks/useImageUpload";
 import { createPost } from "../api/api";
 import parseTags from "../utils/parseTags";
+import PostForm from "../components/PostForm";
 
 const CreatePostPage = () => {
-  const [title, setTitle] = useState("");
-  const [content, setContent] = useState("");
-  const [tags, setTags] = useState("");
+  const [postData, setPostData] = useState({
+    title: "",
+    content: "",
+    tags: "",
+  });
   const [error, setError] = useState("");
 
   const { auth } = useContext(AuthContext);
@@ -32,13 +35,13 @@ const CreatePostPage = () => {
     setError("");
     try {
       const uploadedImageUrl = await upload(auth.token);
-      const postData = {
-        title,
-        content,
-        tags: parseTags(tags),
+      const newPostData = {
+        title: postData.title,
+        content: postData.content,
+        tags: parseTags(postData.tags),
         imageUrl: uploadedImageUrl,
       };
-      await createPost(postData, auth.token);
+      await createPost(newPostData, auth.token);
       navigate("/");
     } catch (error) {
       console.error(error);
@@ -49,70 +52,18 @@ const CreatePostPage = () => {
   return (
     <div>
       <h2>Buat Postingan Baru</h2>
-      <form onSubmit={handleSubmit}>
-        {/* Title */}
-        <div>
-          <label>Judul:</label>
-          <input
-            type="text"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            required
-          />
-        </div>
-
-        {/* Content */}
-        <div>
-          <label>Konten:</label>
-          <textarea
-            value={content}
-            onChange={(e) => setContent(e.target.value)}
-            required
-            rows="10"
-          ></textarea>
-        </div>
-
-        {/* Image upload */}
-        <div>
-          <label>Gambar (opsional) :</label>
-          <input
-            type="file"
-            accept="image/png, image/jpeg, image/gif"
-            onChange={handleImageChange}
-          />
-        </div>
-
-        {/* Image Preview */}
-        {imagePreview && (
-          <div style={{ marginTop: "1rem" }}>
-            <p>Preview</p>
-            <img
-              src={imagePreview}
-              alt="Preview"
-              style={{ maxWidth: "300px", height: "auto" }}
-            />
-          </div>
-        )}
-
-        {/* Tags */}
-        <div>
-          <label>Tags (Pisahkan dengan tanda koma)</label>
-          <input
-            type="text"
-            value={tags}
-            onChange={(e) => setTags(e.target.value)}
-            placeholder="react, express, laravel"
-          />
-        </div>
-
-        {(error || imageError) && (
-          <p style={{ color: "red" }}>{error || imageError}</p>
-        )}
-
-        <button type="submit" disabled={isUploading}>
-          {isUploading ? "Mempublikasikan..." : "Publikasikan"}
-        </button>
-      </form>
+      <PostForm
+        postData={postData}
+        setPostData={setPostData}
+        handleSubmit={handleSubmit}
+        handleImageChange={handleImageChange}
+        imagePreview={imagePreview}
+        isSubmitting={isUploading}
+        error={error || imageError}
+        submitText="Publikasikan"
+        loadingText="Mempublikasikan"
+        showTags={true}
+      />
     </div>
   );
 };
