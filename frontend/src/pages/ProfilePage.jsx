@@ -1,37 +1,13 @@
-import React, { useState, useEffect, useContext } from "react";
+import React, { useContext } from "react";
 import { useParams, Link } from "react-router-dom";
 import { AuthContext } from "../context/AuthContext";
-import { getUserProfile } from "../api/api";
 import PostCard from "../components/PostCard";
+import { useUserProfile } from "../hooks/useUserProfile";
 
 const ProfilePage = () => {
-  const [profile, setProfile] = useState(null);
-  const [error, setError] = useState("");
-  const [loading, setLoading] = useState(true);
   const { auth } = useContext(AuthContext);
-  const { username } = useParams(); // Mengambil username dari URL
-
-  useEffect(() => {
-    if (!auth.token) return;
-    const fetchProfile = async () => {
-      setLoading(true);
-      try {
-        // Menggunakan endpoint baru dengan username
-        console.log(auth.token);
-        const response = await getUserProfile(username, auth.token);
-        setProfile(response.data);
-      } catch (error) {
-        console.error(error);
-        if (error.response && error.response.status === 404) {
-          setError("Pengguna tidak ditemukan.");
-        } else {
-          setError("Gagal memuat profil.");
-        }
-      }
-      setLoading(false);
-    };
-    fetchProfile();
-  }, [username, auth.token]);
+  const { username } = useParams();
+  const { profile, error, loading } = useUserProfile(username);
 
   if (!auth.token) {
     return (
