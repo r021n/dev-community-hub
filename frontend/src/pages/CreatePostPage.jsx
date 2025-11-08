@@ -1,8 +1,9 @@
 import React, { useState, useContext } from "react";
-import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { AuthContext } from "../context/AuthContext";
-import imageCompression from "browser-image-compression";
+import useImageUpload from "../hooks/useImageUpload";
+import { createPost } from "../api/api";
+import parseTags from "../utils/parseTags";
 
 const CreatePostPage = () => {
   const [title, setTitle] = useState("");
@@ -10,20 +11,16 @@ const CreatePostPage = () => {
   const [tags, setTags] = useState("");
   const [error, setError] = useState("");
 
-  const [imageFile, setImageFile] = useState(null);
-  const [imagePreview, setImagePreview] = useState("");
-  const [isUploading, setIsUploading] = useState(false);
-
   const { auth } = useContext(AuthContext);
   const navigate = useNavigate();
 
-  const handleImageChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      setImageFile(file);
-      setImagePreview(URL.createObjectURL(file));
-    }
-  };
+  const {
+    imagePreview,
+    isUploading,
+    error: imageError,
+    handleImageChange,
+    upload,
+  } = useImageUpload();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -32,69 +29,20 @@ const CreatePostPage = () => {
       return;
     }
 
-    setIsUploading(true);
     setError("");
-    let uploadedImageUrl = null;
-
     try {
-      if (imageFile) {
-        console.log(
-          `Ukuran asli gambar: ${(imageFile.size / 1024 / 1024).toFixed(2)} MB`
-        );
-
-        const options = {
-          maxSizeMB: 1,
-          maxWidthOrHeight: 1920,
-          useWebWorker: true,
-        };
-
-        const compressedFile = await imageCompression(imageFile, options);
-        console.log(
-          `Ukuran gambar setelah kompressi: ${(
-            compressedFile.size /
-            1024 /
-            1024
-          ).toFixed(2)} MB`
-        );
-
-        const formData = new FormData();
-        formData.append("image", compressedFile, compressedFile.name);
-
-        const uploadRes = await axios.post(
-          "http://localhost:3001/api/posts/upload-image",
-          formData,
-          {
-            headers: {
-              "Content-Type": "multipart/form-data",
-              Authorization: `Bearer ${auth.token}`,
-            },
-          }
-        );
-
-        uploadedImageUrl = uploadRes.data.imageUrl;
-      }
-      // SEND POST
-      const tagsArray = tags
-        .split(",")
-        .map((tag) => tag.trim())
-        .filter((tag) => tag);
-
+      const uploadedImageUrl = await upload(auth.token);
       const postData = {
         title,
         content,
-        tags: tagsArray,
+        tags: parseTags(tags),
         imageUrl: uploadedImageUrl,
       };
-
-      await axios.post("http://localhost:3001/api/posts", postData, {
-        headers: { Authorization: `Bearer ${auth.token}` },
-      });
+      await createPost(postData, auth.token);
       navigate("/");
     } catch (error) {
       console.error(error);
       setError("Gagal membuat post");
-    } finally {
-      setIsUploading(false);
     }
   };
 
@@ -157,7 +105,9 @@ const CreatePostPage = () => {
           />
         </div>
 
-        {error && <p style={{ color: "red" }}>{error}</p>}
+        {(error || imageError) && (
+          <p style={{ color: "red" }}>{error || imageError}</p>
+        )}
 
         <button type="submit" disabled={isUploading}>
           {isUploading ? "Mempublikasikan..." : "Publikasikan"}
