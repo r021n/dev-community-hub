@@ -36,3 +36,23 @@ export const updatePost = (id, postData, token) =>
   });
 
 export const getPost = (id) => axios.get(`${API_BASE}/posts/${id}`);
+
+export const getCommentsForPost = (postId) =>
+  axios.get(`${API_BASE}/posts/${postId}/comments`);
+
+export const createCommentApi = (postId, commentData, token) =>
+  axios.post(`${API_BASE}/posts/${postId}/comments`, commentData, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+
+export const likePost = (postId, token) =>
+  axios.post(
+    `${API_BASE}/posts/${postId}/like`,
+    {},
+    { headers: { Authorization: `Bearer ${token}` } }
+  );
+
+export const deletePostApi = (postId, token) =>
+  axios.delete(`${API_BASE}/posts/${postId}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });

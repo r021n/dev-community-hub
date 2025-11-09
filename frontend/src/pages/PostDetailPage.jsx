@@ -1,49 +1,23 @@
-import React, { useState, useEffect, useContext, useCallback } from "react";
+import React, { useContext } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
-import axios from "axios";
 import { AuthContext } from "../context/AuthContext";
 import Comment from "../components/Comment";
 import CommentForm from "../components/CommentForm";
 import { transformCloudinaryUrl } from "../utils/cloudinaryHelper";
+import { usePostDetail } from "../hooks/usePostDetail";
+import { createCommentApi, deletePostApi, likePost, getPost } from "../api/api";
 
 const PostDetailPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { auth } = useContext(AuthContext);
-  const [post, setPost] = useState(null);
-  const [comments, setComments] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-
-  const fetchPostData = useCallback(async () => {
-    try {
-      setLoading(true);
-      const postRes = await axios.get(`http://localhost:3001/api/posts/${id}`);
-      const commentsRes = await axios.get(
-        `http://localhost:3001/api/posts/${id}/comments`
-      );
-
-      setPost(postRes.data);
-      setComments(commentsRes.data);
-    } catch (error) {
-      setError("Gagal mendapatkan post, ", error);
-    } finally {
-      setLoading(false);
-    }
-  }, [id]);
-
-  useEffect(() => {
-    fetchPostData();
-  }, [fetchPostData]);
+  const { post, setPost, comments, loading, error, refetch } =
+    usePostDetail(id);
 
   const handleCommentSubmit = async (commentData) => {
     try {
-      await axios.post(
-        `http://localhost:3001/api/posts/${id}/comments`,
-        commentData,
-        { headers: { Authorization: `Bearer ${auth.token}` } }
-      );
-      fetchPostData();
+      await createCommentApi(id, commentData, auth.token);
+      refetch();
     } catch (error) {
       alert("gagal mengirim komputer", error);
     }
@@ -52,9 +26,7 @@ const PostDetailPage = () => {
   const handleDelete = async () => {
     if (window.confirm("Apakah anda ingin menghapus post ini?")) {
       try {
-        await axios.delete(`http://localhost:3001/api/posts/${id}`, {
-          headers: { Authorization: `Bearer ${auth.token}` },
-        });
+        await deletePostApi(id, auth.token);
         navigate("/");
       } catch (error) {
         alert("Gagala menghapus post", error);
@@ -66,17 +38,12 @@ const PostDetailPage = () => {
     if (!auth.token) return alert("Silahkan login untuk like postingan ini");
 
     try {
-      await axios.post(
-        `http://localhost:3001/api/posts/${id}/like`,
-        {},
-        { headers: { Authorization: `Bearer ${auth.token}` } }
-      );
-
-      const postRes = await axios.get(`http://localhost:3001/api/posts/${id}`);
+      await likePost(id, auth.token);
+      const postRes = await getPost(id);
       setPost(postRes.data);
     } catch (error) {
       console.error(error);
-      setError("Gagal melakukan/membatalkan like");
+      alert("Gagal melakukan/membatalkan like");
     }
   };
 
