@@ -25,19 +25,22 @@ const HomePage = () => {
         />
       </div>
       <h2>Recent Posts</h2>
-      {posts.length > 0
-        ? posts.map((post, index) => {
-            const isLastElement = posts.length === index + 1;
-            return (
-              <div
-                ref={isLastElement ? lastPostElementRef : null}
-                key={`${post.id}-${index}`}
-              >
-                <PostCard post={post} />
-              </div>
-            );
-          })
-        : !loading && <p>Belum ada post yang cocok.</p>}
+      {posts.map((post, index) => {
+        if (posts.length === index + 1) {
+          return (
+            <div ref={lastPostElementRef} key={post.id}>
+              <PostCard post={post} />
+            </div>
+          );
+        }
+
+        return (
+          <div key={post.id}>
+            <PostCard post={post} />
+          </div>
+        );
+      })}
+      {posts.length === 0 && !loading && <p>Belum ada post yang cocok.</p>}
       {loading && <p>Loading...</p>}
       {!hasMore && !loading && posts.length > 0 && (
         <p>Anda telah mencapai akhir daftar.</p>

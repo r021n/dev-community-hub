@@ -1,71 +1,50 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useEffect } from "react";
+import { useInfiniteQuery } from "@tanstack/react-query";
+import { useInView } from "react-intersection-observer";
 import { getPosts } from "../api/api";
 
 export const useInfinitePosts = (searchParams) => {
-  const [posts, setPosts] = useState([]);
-  const [page, setPage] = useState(1);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
-  const [hasMore, setHasMore] = useState(true);
+  const search = searchParams.get("search") || "";
+  const tag = searchParams.get("tag") || "";
 
-  const observer = useRef();
-
-  const lastPostElementRef = useCallback(
-    (node) => {
-      if (loading) return;
-      if (observer.current) observer.current.disconnect();
-      observer.current = new IntersectionObserver((entries) => {
-        if (entries[0].isIntersecting && hasMore) {
-          setPage((p) => p + 1);
-        }
-      });
-      if (node) observer.current.observe(node);
-    },
-    [loading, hasMore]
-  );
-
-  useEffect(() => {
-    setPosts([]);
-    setPage(1);
-    setHasMore(true);
-  }, [searchParams.toString()]);
-
-  useEffect(() => {
-    const fetch = async () => {
-      setLoading(true);
-      setError(null);
-      try {
-        const currentSearch = searchParams.get("search") || "";
-        const currentTag = searchParams.get("tag") || "";
-        const resp = await getPosts({
-          search: currentSearch,
-          tag: currentTag,
-          page,
-        });
-        const newPosts = resp.data.posts.filter(
-          (p) => !posts.some((pp) => pp.id === p.id)
-        );
-        setPosts((prev) => [...prev, ...newPosts]);
-        setHasMore(
-          posts.length + resp.data.posts.length < resp.data.totalPosts
-        );
-      } catch (error) {
-        console.error(error);
-        setError("Gagal memuat postingan");
-      } finally {
-        setLoading(false);
+  const {
+    data,
+    error,
+    fetchNextPage,
+    hasNextPage,
+    isFetching,
+    isFetchingNextPage,
+  } = useInfiniteQuery({
+    queryKey: ["posts", { search, tag }],
+    queryFn: ({ pageParam = 1 }) => getPosts({ search, tag, page: pageParam }),
+    getNextPageParam: (lastPage, allPages) => {
+      const totalPosts = lastPage.data.totalPosts;
+      const loadedPosts = allPages.reduce(
+        (acc, page) => acc + page.data.posts.length,
+        0
+      );
+      if (loadedPosts < totalPosts) {
+        return allPages.length + 1;
       }
-    };
-    fetch();
-  }, [page, searchParams]);
+      return undefined;
+    },
+  });
+
+  const { ref, inView } = useInView();
+
+  useEffect(() => {
+    if (inView && hasNextPage && !isFetchingNextPage) {
+      fetchNextPage();
+    }
+  }, [inView, hasNextPage, fetchNextPage, isFetchingNextPage]);
+
+  const posts = data?.pages.flatMap((page) => page.data.posts) ?? [];
 
   return {
     posts,
-    loading,
-    error,
-    hasMore,
-    lastPostElementRef,
-    setPage,
-    setPosts,
+    loading: isFetching,
+    error: error ? "Gagal memuat postingan" : null,
+    hasMore: hasNextPage,
+    lastPostElementRef: ref,
   };
 };
