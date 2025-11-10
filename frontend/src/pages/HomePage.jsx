@@ -1,36 +1,15 @@
-import React, { useState, useEffect } from "react";
+import React from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { useInfinitePosts } from "../hooks/usePosts";
+import { useDebouncedSearch } from "../hooks/useDebouncedSearch";
 import PostCard from "../components/PostCard";
 
 const HomePage = () => {
-  const [searchTerm, setSearchTerm] = useState("");
-  const [searchParams, setSearchParams] = useSearchParams();
+  const [searchParams] = useSearchParams();
+  const [searchTerm, setSearchTerm] = useDebouncedSearch("search", 1200);
 
   const { posts, loading, error, hasMore, lastPostElementRef } =
     useInfinitePosts(searchParams);
-
-  useEffect(() => {
-    const handler = setTimeout(() => {
-      if (searchTerm.trim() === "") {
-        const newParams = new URLSearchParams(searchParams);
-        newParams.delete("search");
-        setSearchParams(newParams);
-      } else {
-        setSearchParams({
-          ...Object.fromEntries(searchParams),
-          search: searchTerm,
-        });
-      }
-    }, 1200);
-
-    return () => clearTimeout(handler);
-  }, [searchTerm, setSearchParams, searchParams]);
-
-  useEffect(() => {
-    const initial = searchParams.get("search") || "";
-    setSearchTerm(initial);
-  }, []);
 
   return (
     <div>
