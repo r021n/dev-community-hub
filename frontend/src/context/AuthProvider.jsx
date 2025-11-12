@@ -5,6 +5,7 @@ import io from "socket.io-client";
 
 export const AuthProvider = ({ children }) => {
   const [auth, setAuth] = useState({ token: null, user: null });
+  const [isAuthLoading, setIsAuthLoading] = useState(true);
   const socket = useRef(null);
 
   useEffect(() => {
@@ -22,6 +23,7 @@ export const AuthProvider = ({ children }) => {
         localStorage.removeItem("token");
       }
     }
+    setIsAuthLoading(false);
   }, []);
 
   useEffect(() => {
@@ -54,7 +56,9 @@ export const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ auth, login, logout, socket }}>
+    <AuthContext.Provider
+      value={{ auth, login, logout, socket, isAuthLoading }}
+    >
       {children}
     </AuthContext.Provider>
   );

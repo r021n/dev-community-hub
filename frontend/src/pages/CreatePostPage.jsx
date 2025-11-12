@@ -1,5 +1,6 @@
 import React, { useState, useContext } from "react";
 import { useNavigate } from "react-router-dom";
+import { useMutation } from "@tanstack/react-query";
 import { AuthContext } from "../context/AuthContext";
 import useImageUpload from "../hooks/useImageUpload";
 import { createPost } from "../api/api";
@@ -12,42 +13,48 @@ const CreatePostPage = () => {
     content: "",
     tags: "",
   });
-  const [error, setError] = useState("");
 
   const { auth } = useContext(AuthContext);
   const navigate = useNavigate();
 
   const {
+    imageFile,
     imagePreview,
-    isUploading,
-    error: imageError,
     handleImageChange,
-    upload,
+    uploadAsync,
+    isUploading,
+    uploadError,
   } = useImageUpload();
+
+  const createPostMutation = useMutation({
+    mutationFn: (newPostData) => createPost(newPostData, auth.token),
+    onSuccess: () => {
+      navigate("/");
+    },
+  });
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!auth.token) {
-      setError("Silahkan login untuk membuat postingan");
       return;
     }
 
-    setError("");
     try {
-      const uploadedImageUrl = await upload(auth.token);
+      const uploadedImageUrl = imageFile ? await uploadAsync(auth.token) : null;
       const newPostData = {
         title: postData.title,
         content: postData.content,
         tags: parseTags(postData.tags),
         imageUrl: uploadedImageUrl,
       };
-      await createPost(newPostData, auth.token);
-      navigate("/");
+      createPostMutation.mutate(newPostData);
     } catch (error) {
       console.error(error);
-      setError("Gagal membuat post");
     }
   };
+
+  const error = createPostMutation.error?.message || uploadError?.message;
+  const isSubmitting = isUploading || createPostMutation.isPending;
 
   return (
     <div>
@@ -58,8 +65,8 @@ const CreatePostPage = () => {
         handleSubmit={handleSubmit}
         handleImageChange={handleImageChange}
         imagePreview={imagePreview}
-        isSubmitting={isUploading}
-        error={error || imageError}
+        isSubmitting={isSubmitting}
+        error={!auth.token ? "Silahkan login untuk membuat postingan" : error}
         submitText="Publikasikan"
         loadingText="Mempublikasikan"
         showTags={true}
