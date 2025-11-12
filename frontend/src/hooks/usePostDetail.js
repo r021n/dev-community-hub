@@ -8,7 +8,6 @@ export const usePostDetail = (postId) => {
   const [error, setError] = useState("");
 
   const fetchData = useCallback(async () => {
-    setLoading(true);
     setError("");
     try {
       const [postRes, commentsRes] = await Promise.all([
