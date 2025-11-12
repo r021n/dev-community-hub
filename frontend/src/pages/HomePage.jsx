@@ -1,32 +1,38 @@
-import React from "react";
+import React, { useContext } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { useInfinitePosts } from "../hooks/usePosts";
 import { useDebouncedSearch } from "../hooks/useDebouncedSearch";
+import { AuthContext } from "../context/AuthContext";
 import PostCard from "../components/PostCard";
 
 const HomePage = () => {
   const [searchParams] = useSearchParams();
   const [searchTerm, setSearchTerm] = useDebouncedSearch("search", 1200);
+  const { auth } = useContext(AuthContext);
 
   const { posts, loading, error, hasMore, lastPostElementRef } =
     useInfinitePosts(searchParams);
 
+  const displayedPosts = auth.token ? posts : posts.slice(0, 5);
+
   return (
     <div>
-      <div style={{ marginBottom: "2rem" }}>
-        <input
-          type="text"
-          placeholder="search post"
-          value={searchTerm}
-          onChange={(e) => {
-            setSearchTerm(e.target.value);
-          }}
-          style={{ padding: "0.5rem", width: "300px" }}
-        />
-      </div>
+      {auth.token && (
+        <div style={{ marginBottom: "2rem" }}>
+          <input
+            type="text"
+            placeholder="search post"
+            value={searchTerm}
+            onChange={(e) => {
+              setSearchTerm(e.target.value);
+            }}
+            style={{ padding: "0.5rem", width: "300px" }}
+          />
+        </div>
+      )}{" "}
       <h2>Recent Posts</h2>
-      {posts.map((post, index) => {
-        if (posts.length === index + 1) {
+      {displayedPosts.map((post, index) => {
+        if (auth.token && displayedPosts.length === index + 1) {
           return (
             <div ref={lastPostElementRef} key={post.id}>
               <PostCard post={post} />
