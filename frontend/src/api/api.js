@@ -11,11 +11,11 @@ export const registerApi = (username, password) =>
 export const getPosts = ({ search = "", tag = "", page = 1 }) =>
   axios.get(`${API_BASE}/posts`, { params: { search, tag, page } });
 
-export const getUserProfile = (username, token) =>
-  axios.get(
-    `${API_BASE}/users/profile/${username}`,
-    token ? { headers: { Authorization: `Bearer ${token}` } } : {}
-  );
+export const getUserProfile = (username, token, page = 1) =>
+  axios.get(`${API_BASE}/users/profile/${username}`, {
+    params: { page },
+    ...(token ? { headers: { Authorization: `Bearer ${token}` } } : {}),
+  });
 
 export const uploadImage = (formData, token) =>
   axios.post(`${API_BASE}/posts/upload-image`, formData, {

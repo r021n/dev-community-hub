@@ -1,37 +1,63 @@
-import React, { useContext } from "react";
+import React, { useContext, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { AuthContext } from "../context/AuthContext";
 import PostCard from "../components/PostCard";
-import { useUserProfile } from "../hooks/useUserProfile";
+import { useInfiniteUserProfile } from "../hooks/useInfiniteUserProfile";
+import { useInView } from "react-intersection-observer";
 
 const ProfilePage = () => {
   const { auth } = useContext(AuthContext);
   const { username } = useParams();
-  const { profile, error, loading } = useUserProfile(username);
+  const {
+    data,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    isLoading,
+    error,
+  } = useInfiniteUserProfile(username);
+
+  const { ref, inView } = useInView({ threshold: 0 });
+
+  useEffect(() => {
+    if (inView && hasNextPage && !isFetchingNextPage) {
+      fetchNextPage();
+    }
+  }, [inView, hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   if (!auth.token) {
     return (
       <div>
-        <h2>Profil Pengguna</h2>
+        <h2>Profile Pengguna</h2>
         <p>
-          Anda harus <Link to="/login">login</Link> untuk melihat profil
-          pengguna.
+          Anda harus <Link to="/login">login</Link> untuk melihat halaman
+          profile pengguna
         </p>
       </div>
     );
   }
 
-  if (loading) {
+  if (isLoading) {
     return <p>Loading...</p>;
   }
 
   if (error) {
-    return <p style={{ color: "red" }}>{error}</p>;
+    return (
+      <p style={{ color: "red" }}>
+        {error.message === "No token or username"
+          ? "Profile tidak ditemukan"
+          : "Gagal memuat profile"}
+      </p>
+    );
   }
 
+  const profile = data?.pages[0];
   if (!profile) {
-    return <p>Profil tidak ditemukan atau sedang dimuat...</p>;
+    return <p>Profile tidak ditemukan atau sedang dimuat</p>;
   }
+
+  const allPosts = data.pages.flatMap((page) => page.posts);
+
   return (
     <div>
       <h2>Profil {profile.username}</h2>
@@ -46,10 +72,15 @@ const ProfilePage = () => {
 
       <hr />
       <h3>Postingan oleh {profile.username}</h3>
-      {profile.posts && profile.posts.length > 0 ? (
-        profile.posts.map((post) => (
-          <PostCard key={post.id} post={post} showAuthor={false} />
-        ))
+      {allPosts.length > 0 ? (
+        <>
+          {allPosts.map((post) => (
+            <PostCard key={post.id} post={post} showAuthor={false} />
+          ))}
+          <div ref={ref} style={{ height: "20px", margin: "20px 0" }}>
+            {isFetchingNextPage && <p>Loading more posts...</p>}
+          </div>
+        </>
       ) : (
         <p>Pengguna ini belum membuat postingan apapun.</p>
       )}
