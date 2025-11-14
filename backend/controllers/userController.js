@@ -19,9 +19,10 @@ const getProfile = async (req, res) => {
 
 const getPublicProfile = async (req, res) => {
   const { username } = req.params;
+  const page = parseInt(req.query.page) || 1;
 
   try {
-    const profile = await userService.getUserProfileByUsername(username);
+    const profile = await userService.getUserProfileByUsername(username, page);
 
     if (!profile) {
       return res.status(404).json({ message: "User tidak ditemukan" });
