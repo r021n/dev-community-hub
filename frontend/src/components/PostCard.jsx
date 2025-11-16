@@ -4,6 +4,14 @@ import {
   transformCloudinaryUrl,
   getVideoThumbnail,
 } from "../utils/cloudinaryHelper";
+import {
+  Card,
+  CardContent,
+  CardFooter,
+  CardHeader,
+} from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { ThumbsUp, Play } from "lucide-react";
 
 const PostCard = ({ post, showAuthor = true }) => {
   const hasMedia = post.image_url || post.video_url;
@@ -13,88 +21,71 @@ const PostCard = ({ post, showAuthor = true }) => {
     ? transformCloudinaryUrl(post.image_url, "thumbnail")
     : null;
   return (
-    <div
+    <Card
       key={post.id}
-      style={{
-        border: "1px solid #ccc",
-        padding: "1rem",
-        margin: "1rem 0",
-        borderRadius: "8px",
-      }}
+      className="overflow-hidden transition-shadow duration-200 hover:shadow-lg"
     >
+      {/* Media Section */}
       {hasMedia && thumbnailUrl && (
         <Link to={`/post/${post.id}/${post.slug}`}>
-          <div style={{ position: "relative", display: "inline-block" }}>
+          <div className="relative overflow-hidden aspect-video bg-muted">
             <img
               src={thumbnailUrl}
               alt={post.title}
               loading="lazy"
-              style={{
-                width: "100%",
-                height: "200px",
-                objectFit: "cover",
-                borderRadius: "8px 8px 0 0",
-                marginBottom: "1rem",
-              }}
+              className="object-cover w-full h-full transition-transform duration-200 hover:scale-105"
             />
             {post.video_url && (
-              <div
-                style={{
-                  position: "absolute",
-                  top: "50%",
-                  left: "50%",
-                  transform: "translate(-50%, -50%)",
-                  width: "60px",
-                  height: "60px",
-                  backgroundColor: "rgba(0, 0, 0, 0.7)",
-                  borderRadius: "50%",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  color: "white",
-                  fontSize: "24px",
-                  cursor: "pointer",
-                }}
-              >
-                ▶
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div className="p-4 transition-colors rounded-full bg-black/70 dark:bg-black/80 backdrop-blur-sm hover:bg-black/80 dark:hover:bg-black/90">
+                  <Play className="w-8 h-8 text-white fill-white" />
+                </div>
               </div>
             )}
           </div>
         </Link>
       )}
 
-      <div style={{ padding: "0 0.5rem" }}>
-        <Link
-          to={`/post/${post.id}/${post.slug}`}
-          style={{ textDecoration: "none", color: "inherit" }}
-        >
-          {post.title}
+      {/* Content Section */}
+      <CardHeader className="pb-3">
+        <Link to={`/post/${post.id}/${post.slug}`} className="hover:underline">
+          <h3 className="text-xl font-semibold leading-tight line-clamp-2">
+            {post.title}
+          </h3>
         </Link>
-        <p>
-          {showAuthor ? (
+      </CardHeader>
+      <CardContent className="pb-3">
+        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+          {showAuthor && (
             <>
-              by {post.author} - 👍{post.like_count}
+              <span>oleh {post.author}</span>
+              <span>•</span>
             </>
-          ) : (
-            <>👍{post.like_count}</>
           )}
-        </p>
-        <div>
-          {post.tags &&
-            post.tags
-              .filter((t) => t)
-              .map((tag) => (
-                <Link
-                  to={`/?tag=${tag}`}
-                  key={tag}
-                  style={{ marginRight: "0.5rem" }}
-                >
-                  #{tag}{" "}
-                </Link>
-              ))}
+          <div className="flex items-center gap-1">
+            <ThumbsUp className="w-3 h-3" />
+            <span>{post.like_count}</span>
+          </div>
         </div>
-      </div>
-    </div>
+      </CardContent>
+      {/* Tags Section */}
+      {post.tags && post.tags.filter((t) => t).length > 0 && (
+        <CardFooter className="flex flex-wrap gap-2 pt-0">
+          {post.tags
+            .filter((t) => t)
+            .map((tag) => (
+              <Link to={`/?tag=${tag}`} key={tag}>
+                <Badge
+                  variant="secondary"
+                  className="transition-colors hover:bg-secondary/80"
+                >
+                  #{tag}
+                </Badge>
+              </Link>
+            ))}
+        </CardFooter>
+      )}
+    </Card>
   );
 };
 
