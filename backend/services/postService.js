@@ -44,6 +44,7 @@ const getAllPosts = async (options = {}) => {
       "p.created_at",
       "p.user_id",
       "p.image_url",
+      "p.video_url",
       "p.slug",
       db.raw("u.username as author"),
       db.raw("COUNT(DISTINCT l.user_id) as like_count"),
@@ -108,6 +109,7 @@ const getPostById = async (postId) => {
       "p.created_at",
       "p.user_id",
       "p.image_url",
+      "p.video_url",
       "p.slug",
       db.raw("u.username as author"),
       db.raw("(SELECT COUNT(*) FROM likes WHERE post_id = p.id) as like_count"),
@@ -125,7 +127,8 @@ const createPost = async (
   title,
   content,
   tags = [],
-  imageUrl = null
+  imageUrl = null,
+  videoUrl = null
 ) => {
   return await db.transaction(async (trx) => {
     const baseSlug = slugify(title);
@@ -137,6 +140,7 @@ const createPost = async (
         title,
         content,
         image_url: imageUrl,
+        video_url: videoUrl,
         slug: uniqueSlug,
       })
       .returning("*");
@@ -166,7 +170,14 @@ const createPost = async (
   });
 };
 
-const updatePost = async (postId, userId, title, content, imageUrl) => {
+const updatePost = async (
+  postId,
+  userId,
+  title,
+  content,
+  imageUrl,
+  videoUrl
+) => {
   const baseSlug = slugify(title);
   let uniqueSlug = baseSlug;
 
@@ -184,6 +195,8 @@ const updatePost = async (postId, userId, title, content, imageUrl) => {
       title,
       content,
       image_url: imageUrl,
+      video_url,
+      videoUrl,
       slug: uniqueSlug,
     });
 

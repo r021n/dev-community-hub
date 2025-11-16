@@ -1,0 +1,2 @@
+ALTER TABLE posts
+ADD COLUMN video_url TEXT;

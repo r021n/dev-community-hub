@@ -15,12 +15,18 @@ router.get("/:id", postController.getPost);
 router.put("/:id", authenticateToken, postController.editPost);
 router.delete("/:id", authenticateToken, postController.removePost);
 
-// upload image rotue
+// upload asset route
 router.post(
   "/upload-image",
   authenticateToken,
   upload.single("image"),
   uploadController.uploadImage
+);
+router.post(
+  "/upload-video",
+  authenticateToken,
+  upload.single("video"),
+  uploadController.uploadVideo
 );
 
 // like route

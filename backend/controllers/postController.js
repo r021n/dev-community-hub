@@ -29,7 +29,7 @@ const getPost = async (req, res) => {
 };
 
 const createPost = async (req, res) => {
-  const { title, content, tags, imageUrl } = req.body;
+  const { title, content, tags, imageUrl, videoUrl } = req.body;
   const userId = req.user.id;
 
   if (!title || !content) {
@@ -42,7 +42,8 @@ const createPost = async (req, res) => {
       title,
       content,
       tags,
-      imageUrl
+      imageUrl,
+      videoUrl
     );
     res.status(201).json(newPost);
   } catch (error) {
@@ -51,7 +52,7 @@ const createPost = async (req, res) => {
 };
 
 const editPost = async (req, res) => {
-  const { title, content, imageUrl } = req.body;
+  const { title, content, imageUrl, videoUrl } = req.body;
   const postId = req.params.id;
   const userId = req.user.id;
 
@@ -61,7 +62,8 @@ const editPost = async (req, res) => {
       userId,
       title,
       content,
-      imageUrl
+      imageUrl,
+      videoUrl
     );
     res.status(200).json(updatedPost);
   } catch (error) {
