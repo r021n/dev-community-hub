@@ -6,6 +6,7 @@ import {
   Navigate,
 } from "react-router-dom";
 import { AuthContext } from "./context/AuthContext";
+import { Toaster } from "./components/ui/toaster";
 import Header from "./components/Header";
 import HomePage from "./pages/HomePage";
 import LoginPage from "./pages/LoginPage";
@@ -50,6 +51,7 @@ function App() {
           />
         </Routes>
       </main>
+      <Toaster />
     </Router>
   );
 }
