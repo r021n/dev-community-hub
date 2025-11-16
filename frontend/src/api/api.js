@@ -25,6 +25,14 @@ export const uploadImage = (formData, token) =>
     },
   });
 
+export const uploadVideo = (formData, token) =>
+  axios.post(`${API_BASE}/posts/upload-video`, formData, {
+    headers: {
+      "Content-Type": "multipart/form-data",
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+  });
+
 export const createPost = (postData, token) =>
   axios.post(`${API_BASE}/posts`, postData, {
     headers: { Authorization: `Bearer ${token}` },

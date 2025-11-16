@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useMutation } from "@tanstack/react-query";
 import { AuthContext } from "../context/AuthContext";
 import useImageUpload from "../hooks/useImageUpload";
+import useVideoUpload from "../hooks/useVideoUpload";
 import { createPost } from "../api/api";
 import parseTags from "../utils/parseTags";
 import PostForm from "../components/PostForm";
@@ -21,10 +22,21 @@ const CreatePostPage = () => {
     imageFile,
     imagePreview,
     handleImageChange,
-    uploadAsync,
-    isUploading,
-    uploadError,
+    uploadAsync: uploadImageAsync,
+    isUploading: isUploadingImage,
+    uploadError: uploadImageError,
   } = useImageUpload();
+
+  const {
+    videoFile,
+    videoPreview,
+    handleVideoChange,
+    uploadAsync: uploadVideoAsync,
+    isUploading: isUploadingVideo,
+    uploadError: uploadVideoError,
+    isCompressing,
+    compressionProgress,
+  } = useVideoUpload();
 
   const createPostMutation = useMutation({
     mutationFn: (newPostData) => createPost(newPostData, auth.token),
@@ -40,12 +52,18 @@ const CreatePostPage = () => {
     }
 
     try {
-      const uploadedImageUrl = imageFile ? await uploadAsync(auth.token) : null;
+      const uploadedImageUrl = imageFile
+        ? await uploadImageAsync(auth.token)
+        : null;
+      const uploadVideoUrl = videoFile
+        ? await uploadVideoAsync(auth.token)
+        : null;
       const newPostData = {
         title: postData.title,
         content: postData.content,
         tags: parseTags(postData.tags),
         imageUrl: uploadedImageUrl,
+        videoUrl: uploadVideoUrl,
       };
       createPostMutation.mutate(newPostData);
     } catch (error) {
@@ -53,8 +71,12 @@ const CreatePostPage = () => {
     }
   };
 
-  const error = createPostMutation.error?.message || uploadError?.message;
-  const isSubmitting = isUploading || createPostMutation.isPending;
+  const error =
+    createPostMutation.error?.message ||
+    uploadImageError?.message ||
+    uploadVideoError?.message;
+  const isSubmitting =
+    isUploadingImage || isUploadingVideo || createPostMutation.isPending;
 
   return (
     <div>
@@ -64,12 +86,16 @@ const CreatePostPage = () => {
         setPostData={setPostData}
         handleSubmit={handleSubmit}
         handleImageChange={handleImageChange}
+        handleVideoChange={handleVideoChange}
         imagePreview={imagePreview}
+        videoPreview={videoPreview}
         isSubmitting={isSubmitting}
         error={!auth.token ? "Silahkan login untuk membuat postingan" : error}
         submitText="Publikasikan"
         loadingText="Mempublikasikan"
         showTags={true}
+        isCompressing={isCompressing}
+        compressionProgress={compressionProgress}
       />
     </div>
   );

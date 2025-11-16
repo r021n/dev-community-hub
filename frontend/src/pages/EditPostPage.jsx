@@ -3,6 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { AuthContext } from "../context/AuthContext";
 import useImageUpload from "../hooks/useImageUpload";
+import useVideoUpload from "../hooks/useVideoUpload";
 import { getPost, updatePost } from "../api/api";
 import PostForm from "../components/PostForm";
 
@@ -20,11 +21,23 @@ const EditPostPage = () => {
     imageFile,
     imagePreview,
     handleImageChange,
-    uploadAsync,
-    isUploading,
-    uploadError,
+    uploadAsync: uploadImageAsync,
+    isUploading: isUploadingImage,
+    uploadError: uploadImageError,
     setImagePreview,
   } = useImageUpload();
+
+  const {
+    videoFile,
+    videoPreview,
+    handleVideoChange,
+    uploadAsync: uploadVideoAsync,
+    isUploading: isUploadingVideo,
+    uploadError: uploadVideoError,
+    setVideoPreview,
+    isCompressing,
+    compressionProgress,
+  } = useVideoUpload();
 
   const {
     data: post,
@@ -45,12 +58,14 @@ const EditPostPage = () => {
       if (post.image_url) {
         setImagePreview(post.image_url);
       }
-      // Cek authorization
+      if (post.video_url) {
+        setVideoPreview(post.video_url);
+      }
       if (auth.user?.id !== post.user_id) {
         navigate("/");
       }
     }
-  }, [post, auth.user?.id, navigate, setImagePreview]);
+  }, [post, auth.user?.id, navigate, setImagePreview, setVideoPreview]);
 
   const updatePostMutation = useMutation({
     mutationFn: (updatePostData) => updatePost(id, updatePostData, auth.token),
@@ -65,12 +80,16 @@ const EditPostPage = () => {
 
     try {
       const uploadedImageUrl = imageFile
-        ? await uploadAsync(auth.token)
+        ? await uploadImageAsync(auth.token)
         : imagePreview;
+      const uploadedVideoUrl = videoFile
+        ? await uploadVideoAsync(auth.token)
+        : videoPreview;
       const updatedPostData = {
         title: postData.title,
         content: postData.content,
         imageUrl: uploadedImageUrl,
+        videoUrl: uploadedVideoUrl,
       };
       updatePostMutation.mutate(updatedPostData);
     } catch (error) {
@@ -82,7 +101,8 @@ const EditPostPage = () => {
 
   const error =
     updatePostMutation.error?.message ||
-    uploadError?.message ||
+    uploadImageError?.message ||
+    uploadVideoError?.message ||
     fetchError?.message;
 
   return (
@@ -93,11 +113,17 @@ const EditPostPage = () => {
         setPostData={setPostData}
         handleSubmit={handleSubmit}
         handleImageChange={handleImageChange}
+        handleVideoChange={handleVideoChange}
         imagePreview={imagePreview}
-        isSubmitting={isUploading || updatePostMutation.isPending}
+        videoPreview={videoPreview}
+        isSubmitting={
+          isUploadingImage || isUploadingVideo || updatePostMutation.isPending
+        }
         error={error}
         submitText="Simpan Perubahan"
         loadingText="Menyimpan..."
+        isCompressing={isCompressing}
+        compressionProgress={compressionProgress}
       />
     </div>
   );
