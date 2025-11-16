@@ -1,8 +1,17 @@
 import React from "react";
 import { Link } from "react-router-dom";
-import { transformCloudinaryUrl } from "../utils/cloudinaryHelper";
+import {
+  transformCloudinaryUrl,
+  getVideoThumbnail,
+} from "../utils/cloudinaryHelper";
 
 const PostCard = ({ post, showAuthor = true }) => {
+  const hasMedia = post.image_url || post.video_url;
+  const thumbnailUrl = post.video_url
+    ? getVideoThumbnail(post.video_url)
+    : post.image_url
+    ? transformCloudinaryUrl(post.image_url, "thumbnail")
+    : null;
   return (
     <div
       key={post.id}
@@ -13,20 +22,44 @@ const PostCard = ({ post, showAuthor = true }) => {
         borderRadius: "8px",
       }}
     >
-      {post.image_url && (
+      {hasMedia && thumbnailUrl && (
         <Link to={`/post/${post.id}/${post.slug}`}>
-          <img
-            src={transformCloudinaryUrl(post.image_url, "thumbnail")}
-            alt={post.title}
-            loading="lazy"
-            style={{
-              width: "100%",
-              height: "200px",
-              objectFit: "cover",
-              borderRadius: "8px 8px 0 0",
-              marginBottom: "1rem",
-            }}
-          />
+          <div style={{ position: "relative", display: "inline-block" }}>
+            <img
+              src={thumbnailUrl}
+              alt={post.title}
+              loading="lazy"
+              style={{
+                width: "100%",
+                height: "200px",
+                objectFit: "cover",
+                borderRadius: "8px 8px 0 0",
+                marginBottom: "1rem",
+              }}
+            />
+            {post.video_url && (
+              <div
+                style={{
+                  position: "absolute",
+                  top: "50%",
+                  left: "50%",
+                  transform: "translate(-50%, -50%)",
+                  width: "60px",
+                  height: "60px",
+                  backgroundColor: "rgba(0, 0, 0, 0.7)",
+                  borderRadius: "50%",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  color: "white",
+                  fontSize: "24px",
+                  cursor: "pointer",
+                }}
+              >
+                ▶
+              </div>
+            )}
+          </div>
         </Link>
       )}
 

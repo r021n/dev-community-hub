@@ -70,6 +70,20 @@ const PostDetailPage = () => {
             }}
           />
         )}
+        {post.video_url && (
+          <video
+            src={post.video_url}
+            controls
+            style={{
+              width: "100%",
+              maxHeight: "500px",
+              borderRadius: "8px",
+              marginBottom: "1rem",
+            }}
+          >
+            Browser anda tidak mendukung video player
+          </video>
+        )}
         <h1>{post.title}</h1>
         <p>
           by <strong>{post.author}</strong> on{" "}
