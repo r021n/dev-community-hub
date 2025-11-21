@@ -20,7 +20,7 @@ const HomePage = () => {
   const displayedPosts = auth.token ? posts : posts.slice(0, 5);
 
   return (
-    <div className="max-w-4xl mx-auto">
+    <div className="max-w-2xl mx-auto">
       {auth.token && (
         <div className="mb-8">
           <div className="relative">

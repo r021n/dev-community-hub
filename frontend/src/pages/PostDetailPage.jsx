@@ -158,7 +158,7 @@ const PostDetailPage = () => {
               </div>
               <div className="flex items-center gap-1">
                 <Calendar className="w-4 h-4" />
-                <time datetime="">
+                <time dateTime="">
                   {new Date(post.created_at).toLocaleDateString()}
                 </time>
               </div>
