@@ -1,6 +1,6 @@
 import React, { useState, useContext, useEffect } from "react";
 import { AuthContext } from "../context/AuthContext";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import FormField from "../components/FormField";
 import { loginApi } from "../api/api";
 import { Button } from "@/components/ui/button";
@@ -44,8 +44,8 @@ const LoginPage = () => {
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen ">
-      <Card>
+    <div className="flex items-center justify-center min-h-[80vh] ">
+      <Card className="w-full max-w-md">
         <CardHeader>
           <CardTitle className="text-2xl font-bold text-center">
             Login
@@ -79,6 +79,17 @@ const LoginPage = () => {
             </Button>
           </form>
         </CardContent>
+        <CardFooter className="flex justify-center">
+          <p className="text-sm text-gray-600">
+            Belum punya akun?{" "}
+            <Link
+              to="/register"
+              className="font-medium text-blue-600 hover:underline"
+            >
+              Register di sini
+            </Link>
+          </p>
+        </CardFooter>
       </Card>
     </div>
   );
