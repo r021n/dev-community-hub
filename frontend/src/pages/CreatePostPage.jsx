@@ -7,6 +7,7 @@ import useVideoUpload from "../hooks/useVideoUpload";
 import { createPost } from "../api/api";
 import parseTags from "../utils/parseTags";
 import PostForm from "../components/PostForm";
+import { PenSquare } from "lucide-react";
 
 const CreatePostPage = () => {
   const [postData, setPostData] = useState({
@@ -79,8 +80,18 @@ const CreatePostPage = () => {
     isUploadingImage || isUploadingVideo || createPostMutation.isPending;
 
   return (
-    <div>
-      <h2>Buat Postingan Baru</h2>
+    <div className="container max-w-3xl px-4 py-10 mx-auto">
+      <div className="flex items-center gap-3 mb-8">
+        <div className="p-3 rounded-full bg-primary/10">
+          <PenSquare className="w-6 h-6 text-primary" />
+        </div>
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Buat Postingan</h1>
+          <p className="text-muted-foreground">
+            Bagikan ide atau momen Anda kepada komunitas.
+          </p>
+        </div>
+      </div>
       <PostForm
         postData={postData}
         setPostData={setPostData}

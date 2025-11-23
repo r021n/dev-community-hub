@@ -6,6 +6,8 @@ import useImageUpload from "../hooks/useImageUpload";
 import useVideoUpload from "../hooks/useVideoUpload";
 import { getPost, updatePost } from "../api/api";
 import PostForm from "../components/PostForm";
+import { Edit, Loader2 } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const EditPostPage = () => {
   const { id } = useParams();
@@ -97,7 +99,21 @@ const EditPostPage = () => {
     }
   };
 
-  if (isAuthLoading || isLoadingPost) return <p>Loading...</p>;
+  if (isAuthLoading || isLoadingPost) {
+    return (
+      <div className="container max-w-3xl px-4 py-10 mx-auto space-y-8">
+        <div className="space-y-2">
+          <Skeleton className="w-48 h-8" />
+          <Skeleton className="w-64 h-4" />
+        </div>
+        <div className="space-y-6">
+          <Skeleton className="w-full h-12" />
+          <Skeleton className="w-full h-48" />
+          <Skeleton className="w-32 h-10" />
+        </div>
+      </div>
+    );
+  }
 
   const error =
     updatePostMutation.error?.message ||
@@ -106,8 +122,18 @@ const EditPostPage = () => {
     fetchError?.message;
 
   return (
-    <div>
-      <h2>Edit Postingan</h2>
+    <div className="container max-w-3xl px-4 py-10 mx-auto">
+      <div className="flex items-center gap-3 mb-8">
+        <div className="p-3 rounded-full bg-primary/10">
+          <Edit className="w-6 h-6 text-primary" />
+        </div>
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Edit Postingan</h1>
+          <p className="text-muted-foreground">
+            Perbarui konten postingan Anda.
+          </p>
+        </div>
+      </div>
       <PostForm
         postData={postData}
         setPostData={setPostData}
