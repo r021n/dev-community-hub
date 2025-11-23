@@ -195,8 +195,7 @@ const updatePost = async (
       title,
       content,
       image_url: imageUrl,
-      video_url,
-      videoUrl,
+      video_url: videoUrl,
       slug: uniqueSlug,
     });
 
