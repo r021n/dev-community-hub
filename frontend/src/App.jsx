@@ -16,9 +16,19 @@ import PostDetailPage from "./pages/PostDetailPage";
 import CreatePostPage from "./pages/CreatePostPage";
 import EditPostPage from "./pages/EditPostPage";
 import AdminDashboardPage from "./pages/AdminDashboardPage";
+import { Loader2 } from "lucide-react";
 
 function App() {
-  const { auth } = useContext(AuthContext);
+  const { auth, isAuthLoading } = useContext(AuthContext);
+
+  if (isAuthLoading) {
+    return (
+      <div className="flex items-center justify-center w-full h-screen">
+        <Loader2 className="w-10 h-10 animate-spin text-primary" />
+      </div>
+    );
+  }
+
   return (
     <Router>
       <Header />
