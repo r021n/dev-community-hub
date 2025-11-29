@@ -15,6 +15,7 @@ import {
 const RegisterPage = () => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -27,6 +28,11 @@ const RegisterPage = () => {
 
     if (password.length < 6) {
       setError("Password tidak boleh kurang dari 6 karakter");
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      setError("Konfirmasi password tidak cocok dengan password");
       return;
     }
 
@@ -72,6 +78,14 @@ const RegisterPage = () => {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="Minimal 6 karakter"
+            />
+
+            <FormField
+              label="Password Confirm"
+              type="password"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              placeholder="Ulangi password anda"
             />
             {error && (
               <p className="mt-2 mb-4 text-sm font-medium text-red-500">
